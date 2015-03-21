@@ -1,0 +1,25 @@
+
+Saturday March 21st, 2015
+-------------------------
+
+    Initial commit.
+
+    Move constants into const.h
+
+    Bring across protocol.h from compression demo
+
+    Split out snapshot stuff from protocol.h
+
+    Add constants to const.h for tick rate (240), server frame rate (30), client frame rate (60)
+
+    Need to get an actual high precision timer for the server. I'm sure I have old code around there for this
+
+    Bring across stuff for timers, sleep and so on (platform.h)
+
+    Sketch out server loop with time and sleeps etc. Working fine.
+
+    Sketched out a good server loop that measures jitter caused by sleep and works with it.
+
+    Added code to detect dropped frames.
+
+    Added safety code so that at least 50% of frame time is required to sim frame otherwise another frame is dropped.

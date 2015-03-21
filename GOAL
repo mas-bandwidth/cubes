@@ -1,0 +1,11 @@
+GOAL
+
+Get the existing cube demo working but with one display and pure client/server architecture
+
+Set this up so the server can run on an EC2 instance
+
+Implement proper interpolation buffer and aim ahead for frame n jitter buffer
+
+Work out how client speeds up vs. slows down time. Tricky without artifacts or adding latency.
+
+Adjust this architecture such that client side prediction is implemented

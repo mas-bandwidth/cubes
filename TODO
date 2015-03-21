@@ -1,0 +1,13 @@
+DONE:
+
+TODO:
+
+    Setup premake for the client and server so I can link to stuff
+
+    Bring across enough GLFW to get the display window created and updated
+
+    Get the client main loop working
+
+    Base it around VSYNC
+
+    Make sure the client frame time is sampled immediately after frame swap so there is no variance
