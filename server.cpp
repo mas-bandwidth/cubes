@@ -7,7 +7,7 @@
 
 void server_frame( uint64_t frame, uint64_t tick, double real_time, double frame_time, double jitter )
 {
-    printf( "%llu: %f [%f]\n", frame, real_time, jitter );
+    printf( "%llu: %f [%+.2fms]\n", frame, real_time, jitter * 1000 );
 }
 
 int server_main( int argc, char ** argv )
@@ -22,21 +22,17 @@ int server_main( int argc, char ** argv )
     double previous_frame_time = start_time;
     double next_frame_time = previous_frame_time + ServerFrameDeltaTime;
 
-    double average_jitter = 0.0;
-
     for ( int i = 0; i < 100; ++i )
     {
-        const double time_to_sleep = max( 0.0, next_frame_time - platform_time() - average_jitter / 2 );
+        const double time_to_sleep = max( 0.0, next_frame_time - platform_time() - AverageSleepJitter );
 
         platform_sleep( time_to_sleep );
 
-        double real_time = platform_time();
+        const double real_time = platform_time();
 
-        double frame_time = next_frame_time;
+        const double frame_time = next_frame_time;
 
-        double jitter = real_time - frame_time - average_jitter / 2;
-
-        average_jitter += ( jitter - average_jitter ) * 0.9;
+        const double jitter = real_time - frame_time;
 
         server_frame( frame, tick, real_time, frame_time, jitter );
 

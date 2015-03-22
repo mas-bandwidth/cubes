@@ -16,6 +16,8 @@ static const double ClientFrameDeltaTime = 1.0 / ServerFramesPerSecond;
 
 static const double ServerFrameSafety = 0.5;
 
+static const double AverageSleepJitter = 2.25 * 0.001;
+
 static const int MaxContexts = 8;
 static const int NumCubes = 901;
 static const int MaxPacketSize = 4 * 1024;
