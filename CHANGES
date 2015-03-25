@@ -1,4 +1,20 @@
 
+Wednesday March 25th, 2015
+--------------------------
+
+    Set up physics.h and physics manager. This is the physics data that shims to the simulation.
+
+    For now bring across ODE, conversion to Rubikon comes later.
+
+    Don't custom build a version of ODE it's simply not required. Use the brew version.
+
+    Split up cpp into physics_ode.cpp so we can later on have a physics_rubikon.cpp implementation.
+
+    Convert physics interface to use vectorial instead of shitty old math library.
+
+    Clean up the physics interface.
+
+
 Tuesday March 24th, 2015
 ------------------------
 
