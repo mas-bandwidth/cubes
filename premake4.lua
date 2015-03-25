@@ -13,6 +13,7 @@ project "server"
     kind "ConsoleApp"
     files { "*.cpp" }
     excludes { "client.cpp" }
+    links { "ode" }
     location "build"
     targetdir "bin"
     defines { "SERVER" }
@@ -23,7 +24,7 @@ project "client"
     kind "ConsoleApp"
     files { "*.cpp" }
     excludes { "server.cpp" }
-    links { "glew", "glfw3", "GLUT.framework", "OpenGL.framework", "Cocoa.framework", "CoreVideo.framework", "IOKit.framework" }
+    links { "ode", "glew", "glfw3", "GLUT.framework", "OpenGL.framework", "Cocoa.framework", "CoreVideo.framework", "IOKit.framework" }
     location "build"
     targetdir "bin"
     defines { "CLIENT" }

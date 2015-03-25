@@ -23,13 +23,14 @@ static const int MaxPlayers = 2;
 static const int MaxCubes = MaxEntities;
 
 static const int MaxContexts = 8;
+
 static const int MaxPacketSize = 4 * 1024;
 static const int UnitsPerMeter = 512;
-
 static const int OrientationBits = 9;
-static const int PositionBoundXY = 32;
-static const int PositionBoundZ = 16;
-
+static const int PositionBoundXY = 255;
+static const int PositionBoundZ = 31;
+static const float MaxLinearSpeed = 31;         // note: this can be set directly on the ODE bodies avoiding me manually hacking this
+static const float MaxAngularSpeed = 15;
 static const int QuantizedPositionBoundXY = UnitsPerMeter * PositionBoundXY - 1;
 static const int QuantizedPositionBoundZ = UnitsPerMeter * PositionBoundZ - 1;
 
