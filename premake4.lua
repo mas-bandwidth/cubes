@@ -1,5 +1,5 @@
 solution "theproduct"
-    includedirs { "." }
+    includedirs { ".", "vectorial" }
     platforms { "x64" }
     configurations { "Debug", "Release" }
     flags { "Symbols", "ExtraWarnings", "EnableSSE2", "FloatFast" , "NoRTTI", "NoExceptions" }
@@ -82,22 +82,24 @@ if not os.is "windows" then
         valid_tools = premake.action.get("gmake").valid_tools,
      
         execute = function ()
-            os.execute "make -j4 client"
-            os.execute "bin/client"
+            if os.execute "make -j4 client" == 0 then
+                os.execute "bin/client"
+            end
         end
     }
 
     newaction
     {
         trigger     = "server",
-        description = "Build and run client",
+        description = "Build and run server",
         valid_kinds = premake.action.get("gmake").valid_kinds,
         valid_languages = premake.action.get("gmake").valid_languages,
         valid_tools = premake.action.get("gmake").valid_tools,
      
         execute = function ()
-            os.execute "make -j4 server"
-            os.execute "bin/server"
+            if os.execute "make -j4 server" == 0 then
+                os.execute "bin/server"
+            end
         end
     }
 

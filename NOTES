@@ -1,0 +1,20 @@
+NOTES
+
+    Might be a good idea to get ahead of stuff and design "zones"
+    into client/server, eg. ClientZone, ServerZone. Each client/server
+    zone can be separate, eg. a machine can have multiple client zones,
+    and each client zone could be running, connected to some state in 
+    the background, eg. like wads in previous engines I've worked on.
+
+    But this is overkill initially. Just start with basic client/server
+    with an entity manager each. Make sure client doesn't know about
+    the initial state of the world, thus the initial block of data
+    needs to come down from the server to initialize this.
+
+    This should *probably* be a base manager type that takes the class to be managed
+    into consideration, eg. CubeManager : public Manager<CubeEntity>
+
+    Maybe in this case differentiating edicts from entities make sense again.
+
+    EdictManager (array of indices), EntityManager<T> ?
+    

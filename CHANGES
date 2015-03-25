@@ -1,4 +1,84 @@
 
+Tuesday March 24th, 2015
+------------------------
+
+    Need to bring in vectorial for vec3, quat etc.
+
+    Rename edict to entity. Entity is the name I need here. Edict is a strange influence from past projects. 
+
+    Added entity type. Added cube type and null type.
+
+    Setup cubes.h. 
+
+    Each cube should then have its own cube index, and there should be a concept of "max cubes"
+
+    Is this overkill? I don't think so. I need to be able to create cubes dynamically
+    and track them separately from non-cube entities. It seems that per-entity type
+    there should be a manager capable of iterating across those entities af that type
+    directly, as well as owning the pool of those entities that can be allocated.
+
+    This is the cube entity type and all related cube functionality.
+
+    Sketch out basic functions, data structures in here. Seems reasonable.
+
+    Setup default entity type to world.
+
+    Since world entity is at zero and nothing special is done to set it up/load it, this works well.
+
+    Eventually world entity should have a model, and this is the "static scene" portion of each level.
+
+    While it should just derive from the base entity type, it will have its own manager
+    "cube manager" which can strip mine cubes and provide a think per-cube if necessary.
+
+    Actually implemented cube allocate and free. Should be functional now.
+
+    Actually implement entity allocate.
+
+    Hack up code to create the cube entities
+
+    Add sequence # per-entity index.
+
+    Implement entity free.
+
+    Bump sequence # on entity free.
+
+
+Monday March 23rd, 2015
+-----------------------
+
+    Create a simple edict like system, SoA that maps object indices to entities.
+
+    0 is world.
+
+    1 is player 1, etc.
+
+    Rest of cubes are MaxPlayers.
+
+    Work out relationship between edicts and entities.
+
+    Are entities managed elsewhere?
+
+    Who frees them?
+
+    Who serializes them? :D
+
+    I think the edict system just doesn't care. It has a type per-edict,
+    and it is game codes responsibility to handle that type and serialize
+    each type appropriately.
+
+    We don't need dynamic types, eg. types not known at compile time.
+
+    So a simple type per-edict is appropriate.
+
+    First entity type will be cube entity.
+
+    I think the cube manager owns the cubes, and inserts them into edict index.
+
+    This way there is an owner, and the physics manager can have the cubes
+    for fast iteration across, but also they live in the edict system and
+    can be indexed as edicts with objects of other types.
+
+
 Saturday March 21st, 2015
 -------------------------
 
@@ -23,3 +103,15 @@ Saturday March 21st, 2015
     Added code to detect dropped frames.
 
     Added safety code so that at least 50% of frame time is required to sim frame otherwise another frame is dropped.
+
+    Setup premake for the client and server so I can link to stuff
+
+    Bring across enough GLFW to get the display window created and updated
+
+    Get the client main loop working
+
+    Base it around VSYNC
+
+    Make sure the client frame time is sampled immediately after frame swap so there is minimal variance
+
+    Unfortunately quite a wide time variance exists... stupid non-realtime OS :p

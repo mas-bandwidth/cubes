@@ -18,8 +18,11 @@ static const double ServerFrameSafety = 0.5;
 
 static const double AverageSleepJitter = 2.25 * 0.001;
 
+static const int MaxEntities = 1024;
+static const int MaxPlayers = 2;
+static const int MaxCubes = MaxEntities;
+
 static const int MaxContexts = 8;
-static const int NumCubes = 901;
 static const int MaxPacketSize = 4 * 1024;
 static const int UnitsPerMeter = 512;
 

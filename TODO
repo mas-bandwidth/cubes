@@ -2,12 +2,44 @@ DONE:
 
 TODO:
 
-    Setup premake for the client and server so I can link to stuff
+    ------------------------------
 
-    Bring across enough GLFW to get the display window created and updated
+    Set up physics.h and physics manager. This is the physics data that shims to the simulation.
 
-    Get the client main loop working
+    For now bring across ODE, conversion to Rubikon comes later
 
-    Base it around VSYNC
+    ------------------------------
 
-    Make sure the client frame time is sampled immediately after frame swap so there is no variance
+    Bring across the game code into game.h. This is the code that takes player input and applies
+    forces and so on to cubes. Structure this such that it is easily called within the context
+    of client side prediction rollback.
+
+    Ensure that game code doesn't talk to ODE directly. goes through simulation.h
+
+    ------------------------------
+
+    Bring across cube simulation and strip it down
+
+    Now bring across shaders and get the basic cube simulation rendering
+
+    Hook up to input and so on.
+
+    Should basically have the cube demo back again at this point.
+
+    Simplify and reduce as much as possible before moving forward.
+
+    Make sure to keep the simulation and game code separate.
+
+    ------------------------------
+
+    Remove the simulation from the client and run it in the server
+
+    Bring in enough networking to send packets between client and server (network.h)
+
+    Send input across to server, using redundancy encoding for lost commands (eg. acks)
+
+    Setup response packet from server -> client containing snapshot.
+
+    Goal is to setup a pure client/server system (with latency here) before implementing client side prediction.
+
+    ------------------------------
