@@ -6,7 +6,12 @@ TODO:
 
     Set up physics.h and physics manager. This is the physics data that shims to the simulation.
 
-    For now bring across ODE, conversion to Rubikon comes later
+    For now bring across ODE, conversion to Rubikon comes later.
+
+    Work out how cube entity interacts with physics. I think it has a physics object (index)
+    and then the physics manager takes care of updating and then pushing its physics state
+    back out to the relevant edict index (eg. update position, orientation, linear/ang vel)
+    post simulation step.
 
     ------------------------------
 
@@ -14,7 +19,7 @@ TODO:
     forces and so on to cubes. Structure this such that it is easily called within the context
     of client side prediction rollback.
 
-    Ensure that game code doesn't talk to ODE directly. goes through simulation.h
+    Ensure that game code doesn't talk to ODE directly. goes through physics.h
 
     ------------------------------
 
