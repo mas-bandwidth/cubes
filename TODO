@@ -2,13 +2,11 @@ DONE:
 
 TODO:
 
-    ------------------------------
+    Hook up player velocity tilt.       // todo: velocity tilt could be enhanced if it is a function of desired strafe vs. actual direction
 
-    Bring across the game code into game.h. This is the code that takes player input and applies
-    forces and so on to cubes. Structure this such that it is easily called within the context
-    of client side prediction rollback.
+    Hook up player push bobbing etc.
 
-    Ensure that game code doesn't talk to ODE directly. goes through physics.h
+    Hook up player push/pull on other cubes entities in the world.
 
     ------------------------------
 

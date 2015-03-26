@@ -1,4 +1,32 @@
 
+Thursday March 26th, 2015
+-------------------------
+
+    Brought across update authority into entity.cpp (commented out)
+
+    Bring across the game code into game.h. This is the code that takes player input and applies
+    forces and so on to cubes. Structure this such that it is easily called within the context
+    of client side prediction rollback.
+
+    Ensure that game code doesn't talk to ODE directly. goes through physics.h
+
+    Stopped work on this as more physics sim work needs to be done first.
+
+    Extended base entity to have a physics index.
+
+    Extended cube entity create to actually create a physics object and set "physics_index" in the object.
+
+    Renamed base entity "index" to "entity_index" to avoid confusion.
+
+    Extended physics update to accept tick #
+
+    Can now continue with player input application...
+
+    Hook up player strafe forces.
+
+    Hook up player bobbing force and torque.
+
+
 Wednesday March 25th, 2015
 --------------------------
 

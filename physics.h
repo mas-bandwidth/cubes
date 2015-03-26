@@ -17,46 +17,46 @@ enum PhysicsShape
 
 struct PhysicsObjectState
 {
-	bool enabled;
-	float scale;
+	bool enabled = true;
+	float scale = 1.0f;
 	vec3f position;
 	quat4f orientation;
 	vec3f linear_velocity;
 	vec3f angular_velocity;
 };
 
-class Physics
+class PhysicsManager
 {	
 	static int * GetInitCount();
 
 public:
 
-	Physics();
-	~Physics();
+	PhysicsManager();
+	~PhysicsManager();
 
 	void Initialize();
 
-	void Update( float delta_time, bool paused = false );
+	void Update( uint64_t tick, double time, float delta_time, bool paused = false );
 
 	int AddObject( const PhysicsObjectState & object_state, PhysicsShape shape );
 
-	bool ObjectExists( int id );
+	bool ObjectExists( int index );
 
-	float GetObjectMass( int id );
+	float GetObjectMass( int index );
 
-	void RemoveObject( int id );
+	void RemoveObject( int index );
 	
-	void GetObjectState( int id, PhysicsObjectState & object_state );
+	void GetObjectState( int index, PhysicsObjectState & object_state );
 
-	void SetObjectState( int id, const PhysicsObjectState & object_state );
+	void SetObjectState( int index, const PhysicsObjectState & object_state );
 
-	const std::vector<uint16_t> & GetObjectInteractions( int id ) const;
+	const std::vector<uint16_t> & GetObjectInteractions( int index ) const;
 
 	int GetNumInteractionPairs() const;
 
-	void ApplyForce( int id, const vec3f & force );
+	void ApplyForce( int index, const vec3f & force );
 
-	void ApplyTorque( int id, const vec3f & torque );
+	void ApplyTorque( int index, const vec3f & torque );
 
 	void AddPlane( const vec3f & normal, float d );
 

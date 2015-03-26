@@ -34,4 +34,11 @@ static const float MaxAngularSpeed = 15;
 static const int QuantizedPositionBoundXY = UnitsPerMeter * PositionBoundXY - 1;
 static const int QuantizedPositionBoundZ = UnitsPerMeter * PositionBoundZ - 1;
 
+static const int ENTITY_NULL = -1;
+static const int ENTITY_WORLD = 0;
+static const int ENTITY_PLAYER_BEGIN = 1;
+static const int ENTITY_PLAYER_END = ENTITY_PLAYER_BEGIN + MaxPlayers;
+
+static const int PHYSICS_NULL = -1;
+
 #endif // #ifndef CONST_H

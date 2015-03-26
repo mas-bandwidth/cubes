@@ -136,13 +136,13 @@ struct PhysicsInternal
 
 // ------------------------------------------
 
-int * Physics::GetInitCount()
+int * PhysicsManager::GetInitCount()
 {
 	static int initCount = 0;
 	return &initCount;
 }
 
-Physics::Physics()
+PhysicsManager::PhysicsManager()
 {
 	int * initCount = GetInitCount();
 	if ( *initCount == 0 )
@@ -151,7 +151,7 @@ Physics::Physics()
 	internal = new PhysicsInternal();
 }
 
-Physics::~Physics()
+PhysicsManager::~PhysicsManager()
 {
 	delete internal;
 	internal = nullptr;
@@ -161,7 +161,7 @@ Physics::~Physics()
 		dCloseODE();
 }
 
-void Physics::Initialize()
+void PhysicsManager::Initialize()
 {
 	PhysicsConfig config;
 	internal->config = config;
@@ -198,8 +198,10 @@ void Physics::Initialize()
 	internal->objects.resize( 1024 );
 }
 
-void Physics::Update( float delta_time, bool paused )
-{		
+void PhysicsManager::Update( uint64_t tick, double time, float delta_time, bool paused )
+{	
+	dRandSetSeed( tick );
+
 	internal->interactions.clear();
 	
 	internal->interactions.resize( internal->objects.size() );
@@ -275,107 +277,107 @@ void Physics::Update( float delta_time, bool paused )
 		dWorldStep( internal->world, delta_time );
 }
 
-int Physics::AddObject( const PhysicsObjectState & object_state, PhysicsShape shape )
+int PhysicsManager::AddObject( const PhysicsObjectState & object_state, PhysicsShape shape )
 {
 	assert( shape == PHYSICS_SHAPE_CUBE );		// no other shape supported yet!
 
 	// find free object slot
 
-	uint64_t id = -1;
+	uint64_t index = -1;
 	for ( int i = 0; i < (int) internal->objects.size(); ++i )
 	{
 		if ( !internal->objects[i].exists() )
 		{
-			id = i;
+			index = i;
 			break;
 		}
 	}
-	if ( id == -1 )
+	if ( index == -1 )
 	{
-		id = internal->objects.size();
-		internal->objects.resize( id + 1 );
+		index = internal->objects.size();
+		internal->objects.resize( index + 1 );
 	}
 
 	// setup object body
 
-	internal->objects[id].body = dBodyCreate( internal->world );
+	internal->objects[index].body = dBodyCreate( internal->world );
 
-	assert( internal->objects[id].body );
+	assert( internal->objects[index].body );
 
 	dMass mass;
 	const float density = 1.0f;
 	dMassSetBox( &mass, density, object_state.scale, object_state.scale, object_state.scale );
-	dBodySetMass( internal->objects[id].body, &mass );
-	dBodySetData( internal->objects[id].body, (void*) id );
+	dBodySetMass( internal->objects[index].body, &mass );
+	dBodySetData( internal->objects[index].body, (void*) index );
 
 	// setup geom and attach to body
 
-	internal->objects[id].scale = object_state.scale;
-	internal->objects[id].geom = dCreateBox( internal->space, object_state.scale, object_state.scale, object_state.scale );
+	internal->objects[index].scale = object_state.scale;
+	internal->objects[index].geom = dCreateBox( internal->space, object_state.scale, object_state.scale, object_state.scale );
 
-	dGeomSetBody( internal->objects[id].geom, internal->objects[id].body );	
+	dGeomSetBody( internal->objects[index].geom, internal->objects[index].body );	
 
 	// set object state
 
-	SetObjectState( id, object_state );
+	SetObjectState( index, object_state );
 
 	// success!
 
-	return id;
+	return index;
 }
 
-bool Physics::ObjectExists( int id )
+bool PhysicsManager::ObjectExists( int index )
 {
-	assert( id >= 0 && id < (int) internal->objects.size() );
-	return internal->objects[id].exists();
+	assert( index >= 0 && index < (int) internal->objects.size() );
+	return internal->objects[index].exists();
 }
 
-float Physics::GetObjectMass( int id )
+float PhysicsManager::GetObjectMass( int index )
 {
-	assert( id >= 0 && id < (int) internal->objects.size() );
-	assert( internal->objects[id].exists() );
+	assert( index >= 0 && index < (int) internal->objects.size() );
+	assert( internal->objects[index].exists() );
 	dMass mass;
-	dBodyGetMass( internal->objects[id].body, &mass );
+	dBodyGetMass( internal->objects[index].body, &mass );
 	return mass.mass;
 }
 
-void Physics::RemoveObject( int id )
+void PhysicsManager::RemoveObject( int index )
 {
-	assert( id >= 0 && id < (int) internal->objects.size() );
-	assert( internal->objects[id].exists() );
+	assert( index >= 0 && index < (int) internal->objects.size() );
+	assert( internal->objects[index].exists() );
 
-	dBodyDestroy( internal->objects[id].body );
-	dGeomDestroy( internal->objects[id].geom );
-	internal->objects[id].body = 0;
-	internal->objects[id].geom = 0;
+	dBodyDestroy( internal->objects[index].body );
+	dGeomDestroy( internal->objects[index].geom );
+	internal->objects[index].body = 0;
+	internal->objects[index].geom = 0;
 }
 
-void Physics::GetObjectState( int id, PhysicsObjectState & object_state )
+void PhysicsManager::GetObjectState( int index, PhysicsObjectState & object_state )
 {
-	assert( id >= 0 );
-	assert( id < (int) internal->objects.size() );
+	assert( index >= 0 );
+	assert( index < (int) internal->objects.size() );
 
-	assert( internal->objects[id].exists() );
+	assert( internal->objects[index].exists() );
 
-	const dReal * position = dBodyGetPosition( internal->objects[id].body );
-	const dReal * orientation = dBodyGetQuaternion( internal->objects[id].body );
-	const dReal * linear_velocity = dBodyGetLinearVel( internal->objects[id].body );
-	const dReal * angular_velocity = dBodyGetAngularVel( internal->objects[id].body );
+	const dReal * position = dBodyGetPosition( internal->objects[index].body );
+	const dReal * orientation = dBodyGetQuaternion( internal->objects[index].body );
+	const dReal * linear_velocity = dBodyGetLinearVel( internal->objects[index].body );
+	const dReal * angular_velocity = dBodyGetAngularVel( internal->objects[index].body );
 
 	object_state.position = vec3f( position[0], position[1], position[2] );
 	object_state.orientation = quat4f( orientation[1], orientation[2], orientation[3], orientation[0] );			// note: orientation[0] is w
 	object_state.linear_velocity = vec3f( linear_velocity[0], linear_velocity[1], linear_velocity[2] );
 	object_state.angular_velocity = vec3f( angular_velocity[0], angular_velocity[1], angular_velocity[2] );
 
-	object_state.enabled = internal->objects[id].timeAtRest < internal->config.RestTime;
+	object_state.enabled = internal->objects[index].timeAtRest < internal->config.RestTime;
 }
 
-void Physics::SetObjectState( int id, const PhysicsObjectState & object_state )
+void PhysicsManager::SetObjectState( int index, const PhysicsObjectState & object_state )
 {
-	assert( id >= 0 );
-	assert( id < (int) internal->objects.size() );
+	assert( index >= 0 );
+	assert( index < (int) internal->objects.size() );
 
-	assert( internal->objects[id].exists() );
+	assert( internal->objects[index].exists() );
 
 	dQuaternion quaternion;
 	quaternion[0] = object_state.orientation.w();
@@ -383,62 +385,62 @@ void Physics::SetObjectState( int id, const PhysicsObjectState & object_state )
 	quaternion[2] = object_state.orientation.y();
 	quaternion[3] = object_state.orientation.z();
 
-	dBodySetPosition( internal->objects[id].body, object_state.position.x(), object_state.position.y(), object_state.position.z() );
-	dBodySetQuaternion( internal->objects[id].body, quaternion );
-	dBodySetLinearVel( internal->objects[id].body, object_state.linear_velocity.x(), object_state.linear_velocity.y(), object_state.linear_velocity.z() );
-	dBodySetAngularVel( internal->objects[id].body, object_state.angular_velocity.x(), object_state.angular_velocity.y(), object_state.angular_velocity.z() );
+	dBodySetPosition( internal->objects[index].body, object_state.position.x(), object_state.position.y(), object_state.position.z() );
+	dBodySetQuaternion( internal->objects[index].body, quaternion );
+	dBodySetLinearVel( internal->objects[index].body, object_state.linear_velocity.x(), object_state.linear_velocity.y(), object_state.linear_velocity.z() );
+	dBodySetAngularVel( internal->objects[index].body, object_state.angular_velocity.x(), object_state.angular_velocity.y(), object_state.angular_velocity.z() );
 
 	if ( object_state.enabled )
 	{
-		internal->objects[id].timeAtRest = 0.0f;
-		dBodyEnable( internal->objects[id].body );
+		internal->objects[index].timeAtRest = 0.0f;
+		dBodyEnable( internal->objects[index].body );
 	}
 	else
 	{
-		internal->objects[id].timeAtRest = internal->config.RestTime;
-		dBodyDisable( internal->objects[id].body );
+		internal->objects[index].timeAtRest = internal->config.RestTime;
+		dBodyDisable( internal->objects[index].body );
 	}
 }
 
-const std::vector<uint16_t> & Physics::GetObjectInteractions( int id ) const
+const std::vector<uint16_t> & PhysicsManager::GetObjectInteractions( int index ) const
 {
-	assert( id >= 0 );
-	assert( id < (int) internal->interactions.size() );
-	return internal->interactions[id];
+	assert( index >= 0 );
+	assert( index < (int) internal->interactions.size() );
+	return internal->interactions[index];
 }
 
-void Physics::ApplyForce( int id, const vec3f & force )
+void PhysicsManager::ApplyForce( int index, const vec3f & force )
 {
-	assert( id >= 0 );
-	assert( id < (int) internal->objects.size() );
-	assert( internal->objects[id].exists() );
+	assert( index >= 0 );
+	assert( index < (int) internal->objects.size() );
+	assert( internal->objects[index].exists() );
 	if ( length_squared( force ) > 0.000001f )
 	{
-		internal->objects[id].timeAtRest = 0.0f;
-		dBodyEnable( internal->objects[id].body );
-		dBodyAddForce( internal->objects[id].body, force.x(), force.y(), force.z() );
+		internal->objects[index].timeAtRest = 0.0f;
+		dBodyEnable( internal->objects[index].body );
+		dBodyAddForce( internal->objects[index].body, force.x(), force.y(), force.z() );
 	}
 }
 
-void Physics::ApplyTorque( int id, const vec3f & torque )
+void PhysicsManager::ApplyTorque( int index, const vec3f & torque )
 {
-	assert( id >= 0 );
-	assert( id < (int) internal->objects.size() );
-	assert( internal->objects[id].exists() );
+	assert( index >= 0 );
+	assert( index < (int) internal->objects.size() );
+	assert( internal->objects[index].exists() );
 	if ( length_squared( torque ) > 0.000001f )
 	{
-		internal->objects[id].timeAtRest = 0.0f;
-		dBodyEnable( internal->objects[id].body );
-		dBodyAddTorque( internal->objects[id].body, torque.x(), torque.y(), torque.z() );
+		internal->objects[index].timeAtRest = 0.0f;
+		dBodyEnable( internal->objects[index].body );
+		dBodyAddTorque( internal->objects[index].body, torque.x(), torque.y(), torque.z() );
 	}
 }
 
-void Physics::AddPlane( const vec3f & normal, float d )
+void PhysicsManager::AddPlane( const vec3f & normal, float d )
 {
 	internal->planes.push_back( dCreatePlane( internal->space, normal.x(), normal.y(), normal.z(), d ) );
 }
 
-void Physics::Reset()
+void PhysicsManager::Reset()
 {
 	for ( int i = 0; i < (int) internal->objects.size(); ++i )
 	{

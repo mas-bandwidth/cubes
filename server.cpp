@@ -5,6 +5,7 @@
 #include "platform.h"
 #include "entity.h"
 #include "cubes.h"
+#include "game.h"
 #include <stdio.h>
 
 struct Server
@@ -12,6 +13,7 @@ struct Server
     uint64_t frame = 0;
     uint64_t tick = 0;
     EntityManager * entity_manager = nullptr;
+    PhysicsManager * physics_manager = nullptr;
     CubeManager * cube_manager = nullptr;
 };
 
@@ -22,15 +24,13 @@ void server_frame( uint64_t frame, uint64_t tick, double real_time, double frame
 
 void server_add_cube( Server & server, const vec3f & position, float size, int required_index = ENTITY_NULL )
 {
-    CubeEntity * cube_entity = server.cube_manager->CreateCube( required_index );
+    CubeEntity * cube_entity = server.cube_manager->CreateCube( position, size, required_index );
     if ( !cube_entity )
     {
         printf( "null cube entity?!\n" );
         return;
     }
-    printf( "created cube: %d\n", cube_entity->index );
-    cube_entity->position = position;
-    cube_entity->size = size;
+    printf( "created cube: entity_index = %d, physics_index = %d\n", cube_entity->entity_index, cube_entity->physics_index );
 }
 
 void server_init_world( Server & server )
@@ -56,7 +56,10 @@ int server_main( int argc, char ** argv )
     Server server;
 
     server.entity_manager = new EntityManager();
-    server.cube_manager = new CubeManager( *server.entity_manager );
+    server.physics_manager = new PhysicsManager();
+    server.cube_manager = new CubeManager( server.entity_manager, server.physics_manager );
+
+    server.physics_manager->Initialize();
 
     server_init_world( server );
 

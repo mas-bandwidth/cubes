@@ -15,11 +15,6 @@
 
 using namespace vectorial;
 
-static const int ENTITY_NULL = -1;
-static const int ENTITY_WORLD = 0;
-static const int ENTITY_PLAYER_BEGIN = 1;
-static const int ENTITY_PLAYER_END = ENTITY_PLAYER_BEGIN + MaxPlayers;
-
 enum EntityFlags
 {
     ENTITY_FLAG_ALLOCATED = 1
@@ -35,12 +30,14 @@ struct Entity
 {
     Entity()
     {
-        index = 0;
         owner = 0;
+        entity_index = ENTITY_WORLD;
+        physics_index = PHYSICS_NULL;
     }
 
-    int index;
     int owner;
+    int physics_index;
+    int entity_index;
     vec3f position;
     quat4f orientation;
     vec3f linear_velocity;
