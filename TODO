@@ -1,26 +1,28 @@
 DONE:
 
+    Sketch out initial render.h
+
 TODO:
 
-    Hook up player velocity tilt.       // todo: velocity tilt could be enhanced if it is a function of desired strafe vs. actual direction
+    Plan out what to bring across
 
-    Hook up player push bobbing etc.
+    I want the rendering stuff from cubes.h
 
-    Hook up player push/pull on other cubes entities in the world.
+    I need the shader manager
+
+    shader manager require core::hash
+
+    core::hash depends on allocator
+
+    Seems like I need to bring across a bunch of low-level core stuff to support the render
 
     ------------------------------
 
-    Bring across cube simulation and strip it down
-
-    Now bring across shaders and get the basic cube simulation rendering
-
     Hook up to input and so on.
 
-    Should basically have the cube demo back again at this point.
+    When bringing across input try to grab immediately key state from keyboard, don't drive it from up/down events
 
-    Simplify and reduce as much as possible before moving forward.
-
-    Make sure to keep the simulation and game code separate.
+    Get the client to the point where it is running a basic singleplayer demo.
 
     ------------------------------
 
@@ -33,5 +35,7 @@ TODO:
     Setup response packet from server -> client containing snapshot.
 
     Goal is to setup a pure client/server system (with latency here) before implementing client side prediction.
+
+    Take time to get the jitter buffer for inputs and interpolation buffer working before going further.
 
     ------------------------------

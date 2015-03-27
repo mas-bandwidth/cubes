@@ -96,15 +96,16 @@ inline void ProcessPlayerInput( EntityManager * entity_manager, PhysicsManager *
             vec3f torque = vec3f( wobble_x, wobble_y, wobble_z ) * 1.5f;
             physics_manager->ApplyTorque( player_cube->physics_index, torque );
         }
-        
+
+        // todo: untangle wtf this is supposed to do
         /*
         // calculate velocity tilt for player cube
-        math::Vector targetUp(0,0,1);
+
+        vec3f targetUp(0,0,1);
         {
-            math::Vector velocity = force[playerId];
-            velocity.z = 0.0f;
+            vec3f strafe( force.x(), force.y(), 0 );
             float speed = velocity.length();
-            if ( speed > 0.001f )
+            if ( length_speed > 0.001f )
             {
                 math::Vector axis = -force[playerId].cross( math::Vector(0,0,1) );
                 axis.normalize();
@@ -114,94 +115,117 @@ inline void ProcessPlayerInput( EntityManager * entity_manager, PhysicsManager *
                 targetUp = math::Quaternion( tilt, axis ).transform( targetUp );
             }
         }
+        */
         
         // stay upright torque on player cube
+        vec3f target_up(0,0,1);
         {
-            math::Vector currentUp = activePlayerObject->orientation.transform( math::Vector(0,0,1) );
-            math::Vector axis = targetUp.cross( currentUp );
-            float angle = math::acos( targetUp.dot( currentUp ) );
+            vec3f current_up = player_cube->orientation.transform( vec3f(0,0,1) );
+            vec3f axis = cross( target_up, current_up );
+            float angle = acos( dot( target_up, current_up ) );
             if ( angle > 0.5f )
                 angle = 0.5f;
-            math::Vector torque = - 100 * axis * angle;
-            simulation->ApplyTorque( activePlayerObject->activeId, torque );
+            vec3f torque = - 100 * axis * angle;
+            physics_manager->ApplyTorque( player_cube->physics_index, torque );
         }
 
         // todo: this linear damping is not framerate independent
         
         // apply damping to player cube
-        activePlayerObject->angularVelocity *= 0.95f;
-        activePlayerObject->linearVelocity.x *= 0.96f;
-        activePlayerObject->linearVelocity.y *= 0.96f;
-        activePlayerObject->linearVelocity.z *= 0.999f;
-        */
+        player_cube->angular_velocity *= 0.95f;
+        player_cube->linear_velocity *= vec3f( 0.96f, 0.96f, 0.999f );
     }
     
     vec3f push_origin = player_cube->position;
+
     push_origin += vec3f( 0, 0, -0.1f );
 
     if ( input.push || input.pull )
     {
-        /*
-        for ( int i = 0; i < activeObjects.GetCount(); ++i )
+        for ( int i = 0; i < MaxEntities; ++i )
         {
-            ActiveObject * activeObject = &activeObjects.GetObject( i );
+            if ( ( entity_manager->GetFlag( i ) & ENTITY_FLAG_ALLOCATED ) == 0 )
+                continue;
 
-            const int authority = activeObject->authority;
-            const float mass = simulation->GetObjectMass( activeObject->activeId );
+            if ( entity_manager->GetType( i ) != ENTITY_TYPE_CUBE )
+                continue;
 
-            if ( push )
+            auto cube = (CubeEntity*) entity_manager->GetEntity( i );
+
+            assert( cube );
+
+            const float mass = cube->size * cube->size * cube->size;
+
+            if ( input.push )
             {
-                math::Vector difference = activeObject->position - push_origin;
-                if ( activeObject == activePlayerObject )
-                    difference.z -= 0.7f;
-                float distanceSquared = difference.lengthSquared();
-                if ( distanceSquared > 0.01f * 0.01f && distanceSquared < 4.0f )
+                vec3f difference = cube->position - push_origin;
+
+                if ( cube == player_cube )
+                    difference -= vec3f( 0, 0, 0.7f );
+                
+                const float distance_squared = length_squared( difference );
+
+                if ( distance_squared > 0.0001f && distance_squared < 4.0f )
                 {
-                    float distance = math::sqrt( distanceSquared );
-                    math::Vector direction = difference / distance;
-                    float magnitude = 1.0f / distanceSquared * 200.0f;
+                    const float distance = sqrt( distance_squared );
+
+                    vec3f direction = difference / distance;
+
+                    float magnitude = 1.0f / distance_squared * 200.0f;
                     if ( magnitude > 500.0f )
                         magnitude = 500.0f;
-                    math::Vector force = direction * magnitude;
-                    if ( activeObject != activePlayerObject )
+
+                    vec3f force = direction * magnitude;
+
+                    if ( cube != player_cube )
                         force *= mass;
-                    else if ( pull )
+
+                    if ( cube == player_cube && input.pull )
                         force *= 20;
 
-                    if ( authority == MaxPlayers || playerId == authority )
+                    if ( cube->authority == 0 || cube->authority == player_id )
                     {
-                        simulation->ApplyForce( activeObject->activeId, force );
-                        activeObject->authority = playerId;
-                        activeObject->authorityTime = 0;
+                        physics_manager->ApplyForce( cube->physics_index, force );
+                        cube->authority = player_id;
+                        // todo: authority time needed? probably.
                     }
                 }
             }
-            else if ( pull )
+            else if ( input.pull )
             {
-                if ( activeObject != activePlayerObject )
+                if ( cube != player_cube )
                 {
-                    math::Vector difference = activeObject->position - origin;
-                    float distanceSquared = difference.lengthSquared();
-                    const float effectiveRadiusSquared = 1.8f * 1.8f;
-                    if ( distanceSquared > 0.2f*0.2f && distanceSquared < effectiveRadiusSquared )
+                    vec3f origin( player_cube->position.x(), player_cube->position.y(), 0.0f );
+
+                    vec3f difference = cube->position - origin;
+
+                    const float distance_squared = length_squared( difference );
+                    
+                    const float effective_radius_squared = 1.8f * 1.8f;
+
+                    if ( distance_squared > 0.2f*0.2f && distance_squared < effective_radius_squared )
                     {
-                        float distance = math::sqrt( distanceSquared );
-                        math::Vector direction = difference / distance;
-                        float magnitude = 1.0f / distanceSquared * 200.0f;
+                        const float distance = sqrt( distance_squared );
+
+                        vec3f direction = difference / distance;
+
+                        float magnitude = 1.0f / distance_squared * 200.0f;
+                        
                         if ( magnitude > 2000.0f )
                             magnitude = 2000.0f;
-                        math::Vector force = - direction * magnitude;
-                        if ( authority == playerId || authority == MaxPlayers )
+
+                        vec3f force = - direction * magnitude;
+
+                        if ( cube->authority == player_id || cube->authority == MaxPlayers )
                         {
-                            simulation->ApplyForce( activeObject->activeId, force * mass );
-                            activeObject->authority = playerId;
-                            activeObject->authorityTime = 0;
+                            physics_manager->ApplyForce( cube->physics_index, force * mass );
+                            cube->authority = player_id;
+                            // todo: authority time needed? probably.
                         }
                     }
                 }
             }
         }
-        */
     }
 }
 

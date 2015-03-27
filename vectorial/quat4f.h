@@ -51,6 +51,14 @@ namespace vectorial
                 angle = 0.0f;
             }
         }
+
+        vec3f transform( const vec3f & input ) const
+        {
+            quat4f inv = quat4f( -x(), -y(), -z(), -w() );
+            quat4f a( 0, input.x(), input.y(), input.z() );
+            quat4f r = ( *this * a ) * inv;
+            return vec3f( r.x(), r.y(), r.z() );
+        }
     };
 
     static inline float norm( const quat4f & q )

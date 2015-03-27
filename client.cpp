@@ -5,9 +5,8 @@
 #include "entity.h"
 #include "cubes.h"
 #include "game.h"
+#include "render.h"
 #include <stdio.h>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 
 struct Global
 {
@@ -16,21 +15,6 @@ struct Global
 };
 
 Global global;
-
-void clear_opengl_error()
-{
-    while ( glGetError() != GL_NO_ERROR );
-}
-
-void check_opengl_error( const char * message )
-{
-    int error = glGetError();
-    if ( error != GL_NO_ERROR )
-    {
-        printf( "opengl error: %s (%s)\n", gluErrorString( error ), message );
-        exit( 1 );
-    }    
-}
 
 void framebuffer_size_callback( GLFWwindow * window, int width, int height )
 {
@@ -154,6 +138,7 @@ int client_main( int argc, char ** argv )
             break;
 
         tick += TicksPerClientFrame;
+
         frame++;
     }
 

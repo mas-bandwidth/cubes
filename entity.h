@@ -30,12 +30,12 @@ struct Entity
 {
     Entity()
     {
-        owner = 0;
+        authority = 0;
         entity_index = ENTITY_WORLD;
         physics_index = PHYSICS_NULL;
     }
 
-    int owner;
+    int authority;
     int physics_index;
     int entity_index;
     vec3f position;

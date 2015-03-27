@@ -1,4 +1,16 @@
 
+Friday March 27th, 2015
+-----------------------
+
+    Hook up player velocity tilt.
+
+    Hook up player push bobbing etc.
+
+    Hook up player push/pull on other cubes entities in the world.
+
+    Game logic for processing player inputs and controlling the sim is now ported across.
+
+
 Thursday March 26th, 2015
 -------------------------
 
