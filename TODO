@@ -2,20 +2,16 @@ DONE:
 
     Sketch out initial render.h
 
-TODO:
-
     Plan out what to bring across
 
-    I want the rendering stuff from cubes.h
+    Seems that at minimum I really only need the load shader, unload shader.
 
-    I need the shader manager
+    Don't really need the manager.
 
-    shader manager require core::hash
+TODO:
 
-    core::hash depends on allocator
-
-    Seems like I need to bring across a bunch of low-level core stuff to support the render
-
+    Try to bring across the rest of the cube render into render.cpp
+    
     ------------------------------
 
     Hook up to input and so on.

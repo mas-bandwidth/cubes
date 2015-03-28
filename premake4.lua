@@ -12,7 +12,7 @@ project "server"
     buildoptions "-std=c++11 -stdlib=libc++ -Wno-deprecated-declarations"
     kind "ConsoleApp"
     files { "*.cpp" }
-    excludes { "client.cpp" }
+    excludes { "client.cpp", "render.cpp" }
     links { "ode" }
     location "build"
     targetdir "bin"
