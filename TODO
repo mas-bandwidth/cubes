@@ -1,8 +1,16 @@
 DONE:
 
+    Bring across the rest of the cube render into render.cpp
+
+    Most brought across. Need to convert the last glm::ortho to remove that POS library.
+
 TODO:
 
-    Try to bring across the rest of the cube render into render.cpp
+    Convert C++ bullshit in the load shader to stdio.
+
+    ------------------------------
+
+    Want to keep simulation/entity related aspects separate from the render
 
     Need to break out parts of the cube from "view::" namespace and consolidate.
 
@@ -17,6 +25,12 @@ TODO:
     There should be a create function for this struct and a free.
 
     This way the owner could share shaders and so on between multiple instances, or not.
+
+    ------------------------------
+
+    Move the client window setup and create stuff into render.cpp
+
+    This way GLFW is not referenced anywhere except render.cpp. Is good.
     
     ------------------------------
 

@@ -7,6 +7,8 @@
 #include "game.h"
 #include "render.h"
 #include <stdio.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 struct Global
 {

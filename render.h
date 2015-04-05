@@ -5,22 +5,10 @@
 
 #include "core.h"
 #include "const.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include "vectorial/vec3f.h"
 #include "vectorial/mat4f.h"
 
 using namespace vectorial;
-
-void clear_opengl_error();
-
-void check_opengl_error( const char * message );
-
-uint32_t load_shader( const char * vertex_file_path, const char * fragment_file_path );
-
-void delete_shader( uint32_t shader );
 
 struct RenderCube
 {
@@ -83,10 +71,14 @@ private:
     int display_height;
 
     vec3f camera_position;
-    vec3f camera_lookAt;
+    vec3f camera_lookat;
     vec3f camera_up;
 
     vec3f light_position;
+
+    uint32_t shadow_shader;
+    uint32_t cubes_shader;
+    uint32_t debug_shader;
 
     uint32_t cubes_vao;
     uint32_t cubes_vbo;
@@ -103,5 +95,13 @@ private:
 
     RenderCubeInstance instance_data[MaxCubes];
 };
+
+void clear_opengl_error();
+
+void check_opengl_error( const char * message );
+
+uint32_t load_shader( const char * vertex_file_path, const char * fragment_file_path );
+
+void delete_shader( uint32_t shader );
 
 #endif // #ifndef RENDER_H
