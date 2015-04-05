@@ -1,16 +1,22 @@
 DONE:
 
-    Sketch out initial render.h
-
-    Plan out what to bring across
-
-    Seems that at minimum I really only need the load shader, unload shader.
-
-    Don't really need the manager.
-
 TODO:
 
     Try to bring across the rest of the cube render into render.cpp
+
+    Need to break out parts of the cube from "view::" namespace and consolidate.
+
+    Need to simplify. This stuff is overly complicated and in reality does very little.
+
+    Basically, the cube render should just take an array of cube data and a camera
+    and light position and render it.
+
+    It should be restructured around a function that just does the work and passes in
+    all the things required to render it in a struct.
+
+    There should be a create function for this struct and a free.
+
+    This way the owner could share shaders and so on between multiple instances, or not.
     
     ------------------------------
 

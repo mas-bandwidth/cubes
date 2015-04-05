@@ -1,4 +1,16 @@
 
+Saturday March 28th, 2015
+-------------------------
+
+    Sketch out initial render.h
+
+    Plan out what to bring across
+
+    Seems that at minimum I really only need the load shader, unload shader.
+
+    Don't really need the manager.
+
+
 Friday March 27th, 2015
 -----------------------
 
