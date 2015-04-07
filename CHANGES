@@ -1,4 +1,20 @@
 
+Tuesday April 7th, 2015
+-----------------------
+
+    Cleaned up the C++ bullshit in shader loading code
+
+
+Sunday April 5th, 2015
+----------------------
+
+    Bring across the rest of the cube render into render.cpp
+
+    Most brought across. 
+
+    Convert the last glm::ortho to vectorial to remove that POS library.
+
+
 Saturday March 28th, 2015
 -------------------------
 

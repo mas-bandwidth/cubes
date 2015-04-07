@@ -1,37 +1,21 @@
 DONE:
 
-    Bring across the rest of the cube render into render.cpp
-
-    Most brought across. Need to convert the last glm::ortho to remove that POS library.
-
 TODO:
 
-    Convert C++ bullshit in the load shader to stdio.
+    ------------------------------
+
+    Move all display related stuff into render.cpp so GLFW is only included there
 
     ------------------------------
 
-    Want to keep simulation/entity related aspects separate from the render
+    What is the next step? The cube render is here, but now we need to hook up the simulation and camera
 
-    Need to break out parts of the cube from "view::" namespace and consolidate.
+    Where does this live?
 
-    Need to simplify. This stuff is overly complicated and in reality does very little.
+    Camera could be an entity type but that seems overkill.
 
-    Basically, the cube render should just take an array of cube data and a camera
-    and light position and render it.
+    Especially seeing as right now the camera is completely cosmetic.
 
-    It should be restructured around a function that just does the work and passes in
-    all the things required to render it in a struct.
-
-    There should be a create function for this struct and a free.
-
-    This way the owner could share shaders and so on between multiple instances, or not.
-
-    ------------------------------
-
-    Move the client window setup and create stuff into render.cpp
-
-    This way GLFW is not referenced anywhere except render.cpp. Is good.
-    
     ------------------------------
 
     Hook up to input and so on.

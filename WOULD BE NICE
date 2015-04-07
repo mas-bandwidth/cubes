@@ -1,0 +1,5 @@
+WOULD BE NICE
+
+    Move the client window setup and create stuff into render.cpp
+
+    This way GLFW is not referenced anywhere except render.cpp. Is good.
