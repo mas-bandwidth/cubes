@@ -7,12 +7,13 @@ static const int ServerFramesPerSecond = 30;
 static const int ClientFramesPerSecond = 60;
 
 static const int TicksPerSecond = 240;
+static const float TickDeltaTime = 1.0 / TicksPerSecond;
 
 static const int TicksPerClientFrame = TicksPerSecond / ClientFramesPerSecond;
 static const int TicksPerServerFrame = TicksPerSecond / ServerFramesPerSecond;
 
 static const double ServerFrameDeltaTime = 1.0 / ServerFramesPerSecond;
-static const double ClientFrameDeltaTime = 1.0 / ServerFramesPerSecond;
+static const double ClientFrameDeltaTime = 1.0 / ClientFramesPerSecond;
 
 static const double ServerFrameSafety = 0.5;
 

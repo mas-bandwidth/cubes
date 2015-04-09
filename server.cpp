@@ -2,66 +2,34 @@
 
 #include "protocol.h"
 #include "shared.h"
-#include "platform.h"
-#include "entity.h"
-#include "cubes.h"
+#include "world.h"
 #include "game.h"
 #include <stdio.h>
 
-struct Server
+void server_tick( World & world )
 {
-    uint64_t frame = 0;
-    uint64_t tick = 0;
-    EntityManager * entity_manager = nullptr;
-    PhysicsManager * physics_manager = nullptr;
-    CubeManager * cube_manager = nullptr;
-};
+    printf( "%llu-%llu: %f [%+.4f]\n", world.frame, world.tick, world.time, TickDeltaTime );
 
-void server_frame( uint64_t frame, uint64_t tick, double real_time, double frame_time, double jitter )
-{
-    printf( "%llu: %f [%+.2fms]\n", frame, real_time, jitter * 1000 );
+    world_tick( world );
 }
 
-void server_add_cube( Server & server, const vec3f & position, float size, int required_index = ENTITY_NULL )
+void server_frame( World & world, double real_time, double frame_time, double jitter )
 {
-    CubeEntity * cube_entity = server.cube_manager->CreateCube( position, size, required_index );
-    if ( !cube_entity )
+    //printf( "%llu: %f [%+.2fms]\n", frame, real_time, jitter * 1000 );
+    
+    for ( int i = 0; i < TicksPerServerFrame; ++i )
     {
-        printf( "null cube entity?!\n" );
-        return;
+        server_tick( world );
     }
-    printf( "created cube: entity_index = %d, physics_index = %d\n", cube_entity->entity_index, cube_entity->physics_index );
-}
-
-void server_init_world( Server & server )
-{
-    const int CubeSteps = 30;
-    const float PlayerCubeSize = 1.5f;
-    const float NonPlayerCubeSize = 0.4f;
-
-    server_add_cube( server, vectorial::vec3f(0,0,10), PlayerCubeSize, ENTITY_PLAYER_BEGIN );
-
-    const float origin = -CubeSteps / 2.0f;
-    const float z = NonPlayerCubeSize / 2.0f;
-    const int count = CubeSteps;
-    for ( int y = 0; y < count; ++y )
-        for ( int x = 0; x < count; ++x )
-            server_add_cube( server, vec3f(x+origin+0.5f,y+origin+0.5f,z), NonPlayerCubeSize );
 }
 
 int server_main( int argc, char ** argv )
 {
     printf( "server\n" );
 
-    Server server;
-
-    server.entity_manager = new EntityManager();
-    server.physics_manager = new PhysicsManager();
-    server.cube_manager = new CubeManager( server.entity_manager, server.physics_manager );
-
-    server.physics_manager->Initialize();
-
-    server_init_world( server );
+    World world;
+    world_init( world );
+    world_setup_cubes( world );
 
     const double start_time = platform_time();
 
@@ -80,7 +48,7 @@ int server_main( int argc, char ** argv )
 
         const double jitter = real_time - frame_time;
 
-        server_frame( server.frame, server.tick, real_time, frame_time, jitter );
+        server_frame( world, real_time, frame_time, jitter );
 
         const double end_of_frame_time = platform_time();
 
@@ -95,18 +63,15 @@ int server_main( int argc, char ** argv )
 
         if ( num_dropped_frames > 0 )
         {
-            printf( "*** dropped frame %llu *** (%d)\n", server.frame, num_dropped_frames );
+            printf( "*** dropped frame %llu *** (%d)\n", world.frame, num_dropped_frames );
         }
 
         previous_frame_time = next_frame_time - ServerFrameDeltaTime;
 
-        server.tick += TicksPerServerFrame;
-
-        server.frame++;
+        world.frame++;
     }
 
-    delete server.entity_manager;
-    delete server.cube_manager;
+    world_free( world );
 
     return 0;
 }

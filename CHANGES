@@ -1,4 +1,18 @@
 
+Thursday April 9th, 2015
+------------------------
+
+    Hook up the simulation so it runs on the server.
+
+    Setup server ticks so we get 240HZ ticks on server running through simulation
+
+    Move the simulation and entities code into shared, "World", eg. world struct
+
+    Everything works from world struct. Don't have globals. Don't make this mistake.
+
+    Make all code for setting up the world and pumping it shared in world.h
+
+
 Tuesday April 7th, 2015
 -----------------------
 

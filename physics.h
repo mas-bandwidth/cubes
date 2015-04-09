@@ -36,7 +36,7 @@ public:
 
 	void Initialize();
 
-	void Update( uint64_t tick, double time, float delta_time, bool paused = false );
+	void Update( uint64_t tick, double t, float dt, bool paused = false );
 
 	int AddObject( const PhysicsObjectState & object_state, PhysicsShape shape );
 

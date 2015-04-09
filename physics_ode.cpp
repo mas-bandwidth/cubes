@@ -198,7 +198,7 @@ void PhysicsManager::Initialize()
 	internal->objects.resize( 1024 );
 }
 
-void PhysicsManager::Update( uint64_t tick, double time, float delta_time, bool paused )
+void PhysicsManager::Update( uint64_t tick, double t, float dt, bool paused )
 {	
 	dRandSetSeed( tick );
 
@@ -256,7 +256,7 @@ void PhysicsManager::Update( uint64_t tick, double time, float delta_time, bool 
 			}
 
 			if ( linearVelocityLengthSquared < internal->config.LinearRestThresholdSquared && angularVelocityLengthSquared < internal->config.AngularRestThresholdSquared )
-				internal->objects[i].timeAtRest += delta_time;
+				internal->objects[i].timeAtRest += dt;
 			else
 				internal->objects[i].timeAtRest = 0.0f;
 
@@ -272,9 +272,9 @@ void PhysicsManager::Update( uint64_t tick, double time, float delta_time, bool 
 	dSpaceCollide( internal->space, internal, PhysicsInternal::NearCallback );
 
 	if ( internal->config.QuickStep )
-		dWorldQuickStep( internal->world, delta_time );
+		dWorldQuickStep( internal->world, dt );
 	else
-		dWorldStep( internal->world, delta_time );
+		dWorldStep( internal->world, dt );
 }
 
 int PhysicsManager::AddObject( const PhysicsObjectState & object_state, PhysicsShape shape )

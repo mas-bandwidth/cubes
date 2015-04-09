@@ -72,7 +72,7 @@ struct CubeManager
         entity_manager->Free( entity_index );
     }
 
-    void Update( const TimeBase & time_base )
+    void Update( double t, float dt )
     {
         // ...
     }
