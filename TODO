@@ -2,18 +2,17 @@ DONE:
 
 TODO:
 
-    -------------------------------
+    ------------------------------
 
-    Add code to physics manager to grab state from physics objects and update
-    cube entities post-physics update.
+    Add code to physics manager to grab state from physics objects and update cube entities.
 
     ------------------------------
 
-    Hook up the player input to drive the simulation
+    Hook up the client render to the cube entities
 
-    When bringing across input try to grab immediately key state from keyboard, don't drive it from up/down events
+    Tune the client simulation now that it is running at 240HZ
 
-    Get the client to the point where it is running a basic singleplayer demo.
+    Pass over code and fix any TODOs or hacks.
 
     ------------------------------
 

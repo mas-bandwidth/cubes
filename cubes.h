@@ -34,9 +34,11 @@ struct CubeManager
 
     CubeEntity * CreateCube( const vec3f & position, float size, int required_entity_index = ENTITY_NULL )
     {
-        const int entity_index = entity_manager->Allocate( ENTITY_TYPE_CUBE, required_entity_index );
+        const int entity_index = entity_manager->Allocate( required_entity_index );
+
         if ( entity_index == ENTITY_NULL )
             return nullptr;
+        
         for ( int i = 0; i < MaxCubes; ++i )
         {
             if ( !allocated[i] )
@@ -49,11 +51,15 @@ struct CubeManager
                 initial_state.position = position;
                 initial_state.scale = size;
                 initial_state.enabled = true;
+                
                 cubes[i].physics_index = physics_manager->AddObject( initial_state, PHYSICS_SHAPE_CUBE );
                 
+                entity_manager->SetEntity( entity_index, &cubes[i], ENTITY_TYPE_CUBE );
+
                 return &cubes[i];
             }
         }
+
         return nullptr;
     }
 

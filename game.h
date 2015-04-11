@@ -3,9 +3,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "entity.h"
-#include "cubes.h"
-#include "physics.h"
+#include "world.h"
 
 struct Input
 {
@@ -42,16 +40,18 @@ struct Input
     }
 };
 
-inline void ProcessPlayerInput( EntityManager * entity_manager, PhysicsManager * physics_manager, int player_id, const Input & input, uint64_t tick, double t, float dt )
+inline void game_process_player_input( World & world, const Input & input, int player_id )
 {
-    assert( entity_manager );
-    assert( physics_manager );
+    const double t = world.time;
+    
+    assert( world.entity_manager );
+    assert( world.physics_manager );
 
     const int player_entity_index = ENTITY_PLAYER_BEGIN + player_id;
 
-    assert( entity_manager->GetType( player_entity_index ) == ENTITY_TYPE_CUBE );
+    assert( world.entity_manager->GetType( player_entity_index ) == ENTITY_TYPE_CUBE );
 
-    CubeEntity * player_cube = (CubeEntity*) entity_manager->GetEntity( player_entity_index );
+    CubeEntity * player_cube = (CubeEntity*) world.entity_manager->GetEntity( player_entity_index );
 
     assert( player_cube );
 
@@ -73,7 +73,7 @@ inline void ProcessPlayerInput( EntityManager * entity_manager, PhysicsManager *
             force *= 2.0f;
     }
 
-    physics_manager->ApplyForce( player_cube->physics_index, force );
+    world.physics_manager->ApplyForce( player_cube->physics_index, force );
 
     if ( input.push )
     {
@@ -85,7 +85,7 @@ inline void ProcessPlayerInput( EntityManager * entity_manager, PhysicsManager *
             const float wobble_y = sin(t*0.1+2) + sin(t*0.05f+4) + sin(t+11);
             const float wobble_z = sin(t*0.1+3) + sin(t*0.05f+5) + sin(t+12);
             vec3f force = vec3f( wobble_x, wobble_y, wobble_z ) * 2.0f;
-            physics_manager->ApplyForce( player_cube->physics_index, force );
+            world.physics_manager->ApplyForce( player_cube->physics_index, force );
         }
         
         // bobbing torque on player cube
@@ -94,7 +94,7 @@ inline void ProcessPlayerInput( EntityManager * entity_manager, PhysicsManager *
             const float wobble_y = sin(t*0.09+5)  + sin(t*0.045f+16) + sin(t*1.11f);
             const float wobble_z = sin(t*0.05+4)  + sin(t*0.055f+9)  + sin(t*1.12f);
             vec3f torque = vec3f( wobble_x, wobble_y, wobble_z ) * 1.5f;
-            physics_manager->ApplyTorque( player_cube->physics_index, torque );
+            world.physics_manager->ApplyTorque( player_cube->physics_index, torque );
         }
 
         // todo: untangle wtf this is supposed to do
@@ -126,7 +126,7 @@ inline void ProcessPlayerInput( EntityManager * entity_manager, PhysicsManager *
             if ( angle > 0.5f )
                 angle = 0.5f;
             vec3f torque = - 100 * axis * angle;
-            physics_manager->ApplyTorque( player_cube->physics_index, torque );
+            world.physics_manager->ApplyTorque( player_cube->physics_index, torque );
         }
 
         // todo: this linear damping is not framerate independent
@@ -144,13 +144,13 @@ inline void ProcessPlayerInput( EntityManager * entity_manager, PhysicsManager *
     {
         for ( int i = 0; i < MaxEntities; ++i )
         {
-            if ( ( entity_manager->GetFlag( i ) & ENTITY_FLAG_ALLOCATED ) == 0 )
+            if ( ( world.entity_manager->GetFlag( i ) & ENTITY_FLAG_ALLOCATED ) == 0 )
                 continue;
 
-            if ( entity_manager->GetType( i ) != ENTITY_TYPE_CUBE )
+            if ( world.entity_manager->GetType( i ) != ENTITY_TYPE_CUBE )
                 continue;
 
-            auto cube = (CubeEntity*) entity_manager->GetEntity( i );
+            auto cube = (CubeEntity*) world.entity_manager->GetEntity( i );
 
             assert( cube );
 
@@ -185,7 +185,7 @@ inline void ProcessPlayerInput( EntityManager * entity_manager, PhysicsManager *
 
                     if ( cube->authority == 0 || cube->authority == player_id )
                     {
-                        physics_manager->ApplyForce( cube->physics_index, force );
+                        world.physics_manager->ApplyForce( cube->physics_index, force );
                         cube->authority = player_id;
                         // todo: authority time needed? probably.
                     }
@@ -218,7 +218,7 @@ inline void ProcessPlayerInput( EntityManager * entity_manager, PhysicsManager *
 
                         if ( cube->authority == player_id || cube->authority == MaxPlayers )
                         {
-                            physics_manager->ApplyForce( cube->physics_index, force * mass );
+                            world.physics_manager->ApplyForce( cube->physics_index, force * mass );
                             cube->authority = player_id;
                             // todo: authority time needed? probably.
                         }

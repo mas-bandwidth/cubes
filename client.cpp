@@ -25,28 +25,20 @@ void framebuffer_size_callback( GLFWwindow * window, int width, int height )
     glViewport( 0, 0, width, height );
 }
 
-void key_callback( GLFWwindow * window, int key, int scancode, int action, int mods )
-{
-    // ...
-}
-
-void char_callback( GLFWwindow * window, unsigned int code )
-{
-    // ...
-}
-
-void client_tick( World & world )
+void client_tick( World & world, const Input & input )
 {
     printf( "%llu-%llu: %f [%+.4f]\n", world.frame, world.tick, world.time, TickDeltaTime );
+
+    game_process_player_input( world, input, 0 );
 
     world_tick( world );
 }
 
-void client_frame( World & world, double real_time, double frame_time )
+void client_frame( World & world, const Input & input, double real_time, double frame_time )
 {
     for ( int i = 0; i < TicksPerClientFrame; ++i )
     {
-        client_tick( world );
+        client_tick( world, input );
         world.time += TickDeltaTime;
         world.tick++;
     }
@@ -67,6 +59,19 @@ void client_render()
     client_clear();
 
     // ...
+}
+
+Input client_sample_input( GLFWwindow * window )
+{
+    assert( window );
+    Input input;
+    input.left = glfwGetKey( window, GLFW_KEY_LEFT );
+    input.right = glfwGetKey( window, GLFW_KEY_RIGHT );
+    input.up = glfwGetKey( window, GLFW_KEY_UP );
+    input.down = glfwGetKey( window, GLFW_KEY_DOWN );
+    input.push = glfwGetKey( window, GLFW_KEY_SPACE );
+    input.pull = glfwGetKey( window, GLFW_KEY_Z );
+    return input;
 }
 
 int client_main( int argc, char ** argv )
@@ -121,9 +126,6 @@ int client_main( int argc, char ** argv )
 
     glfwMakeContextCurrent( window );
 
-    glfwSetKeyCallback( window, key_callback );
-    glfwSetCharCallback( window, char_callback );
-
     glewExperimental = GL_TRUE;
     glewInit();
 
@@ -143,7 +145,9 @@ int client_main( int argc, char ** argv )
 
         previous_frame_time = frame_start_time;
 
-        client_frame( world, frame_start_time, world.frame * ClientFrameDeltaTime );
+        Input input = client_sample_input( window );
+
+        client_frame( world, input, frame_start_time, world.frame * ClientFrameDeltaTime );
 
         client_render();
 

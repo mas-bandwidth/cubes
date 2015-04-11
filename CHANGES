@@ -4,6 +4,19 @@ Saturday April 11th, 2015
 
     Setup the client so it also creates a world and updates it with ticks.
 
+    Added code to get input on client using direct key state accessors.
+
+    Doesn't seem that player cube entity is getting picked up by the entity manager,
+    or at least, it isn't valid on get entity return?
+
+    Validate cubes get added properly at entity level on setup?
+
+    Was missing the set entity, plus some bugs in the entity allocate.
+
+    Works now.
+
+    Verified that input is getting properly sampled.
+
 
 Thursday April 9th, 2015
 ------------------------

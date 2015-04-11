@@ -61,7 +61,7 @@ struct EntityManager
         memset( entities, 0, sizeof( entities ) );
     }
 
-    int Allocate( EntityType type, int required_index = ENTITY_NULL )
+    int Allocate( int required_index = ENTITY_NULL )
     {
         assert( num_entities >= 0 );
         assert( num_entities <= MaxEntities );
@@ -72,14 +72,14 @@ struct EntityManager
             if ( ( flags[required_index] & ENTITY_FLAG_ALLOCATED ) == 0 )
             {
                 num_entities++;
-                types[required_index] = type;
+                flags[required_index] = ENTITY_FLAG_ALLOCATED;
                 return required_index;
             }
             else
                 return ENTITY_NULL;
         }
         int allocated_index = ENTITY_NULL;
-        for ( int i = 0; i < MaxEntities; ++i )
+        for ( int i = ENTITY_PLAYER_END; i < MaxEntities; ++i )
         {
             allocated_index = entity_alloc_index++;
             if ( ( flags[allocated_index] & ENTITY_FLAG_ALLOCATED ) == 0 )
@@ -88,6 +88,7 @@ struct EntityManager
         num_entities++;
         assert( allocated_index != ENTITY_NULL );
         assert( num_entities <= MaxEntities );
+        flags[allocated_index] = ENTITY_FLAG_ALLOCATED;
         return allocated_index;
     }
 
@@ -121,7 +122,10 @@ struct EntityManager
     {
         assert( index >= 0 );
         assert( index < MaxEntities );
-        // todo: set entity at index. make sure allocated etc.
+        assert( flags[index] & ENTITY_FLAG_ALLOCATED );
+        assert( entities[index] == nullptr );
+        entities[index] = entity;
+        types[index] = type;
     }
 
     Entity * GetEntity( int index )
