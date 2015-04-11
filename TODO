@@ -2,8 +2,6 @@ DONE:
 
 TODO:
 
-    Setup the client so it also creates a world and updates it with ticks.
-
     -------------------------------
 
     Add code to physics manager to grab state from physics objects and update

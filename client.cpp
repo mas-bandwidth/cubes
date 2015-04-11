@@ -2,9 +2,8 @@
 
 #include "protocol.h"
 #include "platform.h"
-#include "entity.h"
-#include "cubes.h"
 #include "game.h"
+#include "world.h"
 #include "render.h"
 #include <stdio.h>
 #include <GL/glew.h>
@@ -12,16 +11,16 @@
 
 struct Global
 {
-    int displayWidth;
-    int displayHeight;
+    int display_width;
+    int display_height;
 };
 
 Global global;
 
 void framebuffer_size_callback( GLFWwindow * window, int width, int height )
 {
-    global.displayWidth = width;
-    global.displayHeight = height;
+    global.display_width = width;
+    global.display_height = height;
 
     glViewport( 0, 0, width, height );
 }
@@ -36,14 +35,28 @@ void char_callback( GLFWwindow * window, unsigned int code )
     // ...
 }
 
-void client_frame( uint64_t frame, uint64_t tick, double real_time, double frame_time )
+void client_tick( World & world )
 {
-    printf( "%llu: %f\n", frame, real_time );
+    printf( "%llu-%llu: %f [%+.4f]\n", world.frame, world.tick, world.time, TickDeltaTime );
+
+    world_tick( world );
+}
+
+void client_frame( World & world, double real_time, double frame_time )
+{
+    for ( int i = 0; i < TicksPerClientFrame; ++i )
+    {
+        client_tick( world );
+        world.time += TickDeltaTime;
+        world.tick++;
+    }
+
+    world.frame++;
 }
 
 void client_clear()
 {
-    glViewport( 0, 0, global.displayWidth, global.displayHeight );
+    glViewport( 0, 0, global.display_width, global.display_height );
     glClearStencil( 0 );
     glClearColor( 1.0f, 1.0f, 1.0f, 1.0f );     
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
@@ -90,7 +103,6 @@ int client_main( int argc, char ** argv )
     int window_width, window_height;
     glfwGetWindowSize( window, &window_width, &window_height );
 
-
     const GLFWvidmode * desktop_mode = glfwGetVideoMode( glfwGetPrimaryMonitor() );
     if ( !desktop_mode )
     {
@@ -103,7 +115,7 @@ int client_main( int argc, char ** argv )
 
     glfwSetWindowPos( window, desktop_width / 2 - window_width / 2, desktop_height / 2 - window_height / 2 );
 
-    glfwGetFramebufferSize( window, &global.displayWidth, &global.displayHeight );
+    glfwGetFramebufferSize( window, &global.display_width, &global.display_height );
 
     glfwSetFramebufferSizeCallback( window, framebuffer_size_callback );
 
@@ -115,12 +127,13 @@ int client_main( int argc, char ** argv )
     glewExperimental = GL_TRUE;
     glewInit();
 
-    uint64_t frame = 0;
-    uint64_t tick = 0;
+    client_clear();
 
     double previous_frame_time = platform_time();
 
-    client_clear();
+    World world;
+    world_init( world );
+    world_setup_cubes( world );
 
     while ( true )
     {
@@ -130,7 +143,7 @@ int client_main( int argc, char ** argv )
 
         previous_frame_time = frame_start_time;
 
-        client_frame( tick, frame, frame * ClientFrameDeltaTime, frame_start_time );
+        client_frame( world, frame_start_time, world.frame * ClientFrameDeltaTime );
 
         client_render();
 
@@ -138,11 +151,9 @@ int client_main( int argc, char ** argv )
 
         if ( glfwWindowShouldClose( window ) )
             break;
-
-        tick += TicksPerClientFrame;
-
-        frame++;
     }
+
+    world_free( world );
 
     glfwTerminate();
 
