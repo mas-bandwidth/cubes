@@ -20,7 +20,7 @@ void render_get_state( const World & world, RenderState & render_state )
         mat4f rotation = mat4f::rotation( cube_entity.orientation );
         mat4f scale = mat4f::scale( cube_entity.scale * 0.5f );
 
-        mat4f inv_translation = vectorial::mat4f::translation( -cube_entity.position );
+        mat4f inv_translation = mat4f::translation( -cube_entity.position );
         mat4f inv_rotation = transpose( rotation );
         mat4f inv_scale = mat4f::scale( 1.0f / ( cube_entity.scale * 0.5f ) );
 
@@ -271,7 +271,7 @@ void Render::Initialize()
         if ( position_location >= 0 )
         {
             glEnableVertexAttribArray( position_location );
-            glVertexAttribPointer( position_location, 3, GL_FLOAT, GL_FALSE, sizeof(vectorial::vec3f), (GLubyte*)0 );
+            glVertexAttribPointer( position_location, 3, GL_FLOAT, GL_FALSE, sizeof(vec3f), (GLubyte*)0 );
         }
 
         glBindBuffer( GL_ARRAY_BUFFER, 0 );
@@ -343,12 +343,12 @@ void Render::ResizeDisplay( int _display_width, int _display_height )
     display_height = _display_height;
 }
 
-void Render::SetLightPosition( const vectorial::vec3f & _light_position )
+void Render::SetLightPosition( const vec3f & _light_position )
 {
     light_position = _light_position;
 }
 
-void Render::SetCamera( const vectorial::vec3f & position, const vectorial::vec3f & lookat, const vectorial::vec3f & up )
+void Render::SetCamera( const vec3f & position, const vec3f & lookat, const vec3f & up )
 {
     camera_position = position;
     camera_lookat = lookat;
@@ -388,7 +388,10 @@ void Render::BeginScene( float x1, float y1, float x2, float y2 )
 void Render::RenderScene( const RenderState & render_state )
 {
     if ( render_state.num_cubes == 0 )
+    {
+        printf( "zero cubes?\n" );
         return;
+    }
 
     glUseProgram( cubes_shader );
 
@@ -409,9 +412,11 @@ void Render::RenderScene( const RenderState & render_state )
         glUniform3fv( light_location, 1, data );
     }
 
-    vectorial::mat4f view_matrix = vectorial::mat4f::lookAt( camera_position, camera_lookat, camera_up );
+    mat4f view_matrix = mat4f::lookAt( camera_position, camera_lookat, camera_up );
 
-    vectorial::mat4f projection_matrix = vectorial::mat4f::perspective( 40.0f, display_width / (float)display_height, 0.1f, 100.0f );
+    mat4f projection_matrix = mat4f::perspective( 40.0f, display_width / (float)display_height, 0.1f, 100.0f );
+
+    printf( "num cubes = %d\n", render_state.num_cubes );
 
     for ( int i = 0; i < render_state.num_cubes; ++i )
     {
@@ -437,18 +442,20 @@ void Render::RenderScene( const RenderState & render_state )
 
     glUseProgram( 0 );
 
+    printf( "render scene\n" );
+
     check_opengl_error( "after render scene" );
 }
 
 inline void GenerateSilhoutteVerts( int & vertex_index,
-                                    __restrict vectorial::vec3f * vertices,
-                                    const vectorial::mat4f & transform,
-                                    const vectorial::vec3f & local_light,
-                                    const vectorial::vec3f & world_light,
-                                    vectorial::vec3f a, 
-                                    vectorial::vec3f b,
-                                    const vectorial::vec3f & left_normal,
-                                    const vectorial::vec3f & right_normal,
+                                    __restrict vec3f * vertices,
+                                    const mat4f & transform,
+                                    const vec3f & local_light,
+                                    const vec3f & world_light,
+                                    vec3f a, 
+                                    vec3f b,
+                                    const vec3f & left_normal,
+                                    const vec3f & right_normal,
                                     bool left_dot,
                                     bool right_dot )
 {
@@ -457,29 +464,28 @@ inline void GenerateSilhoutteVerts( int & vertex_index,
     {
         // ensure correct winding order for silhouette edge
 
-        const vectorial::vec3f cross = vectorial::cross( b - a, local_light );
-        if ( dot( cross, a ) < 0 )
+        if ( dot( cross( b - a, local_light ), a ) < 0 )
         {
-            vectorial::vec3f tmp = a;
+            vec3f tmp = a;
             a = b;
             b = tmp;
         }
         
         // transform into world space
         
-        vectorial::vec3f world_a = transformPoint( transform, a );
-        vectorial::vec3f world_b = transformPoint( transform, b );
+        vec3f world_a = transformPoint( transform, a );
+        vec3f world_b = transformPoint( transform, b );
         
         // extrude to ground plane z=0 in world space
         
-        vectorial::vec3f difference_a = world_a - world_light;
-        vectorial::vec3f difference_b = world_b - world_light;
+        vec3f difference_a = world_a - world_light;
+        vec3f difference_b = world_b - world_light;
         
         const float at = world_light.z() / difference_a.z();
         const float bt = world_light.z() / difference_b.z();
         
-        vectorial::vec3f extruded_a = world_light - difference_a * at;
-        vectorial::vec3f extruded_b = world_light - difference_b * bt;
+        vec3f extruded_a = world_light - difference_a * at;
+        vec3f extruded_b = world_light - difference_b * bt;
         
         // emit extruded quad as two triangles
         
@@ -494,30 +500,30 @@ inline void GenerateSilhoutteVerts( int & vertex_index,
     }
 }
 
-static vectorial::vec3f a(-1,+1,-1);
-static vectorial::vec3f b(+1,+1,-1);
-static vectorial::vec3f c(+1,+1,+1);
-static vectorial::vec3f d(-1,+1,+1);
-static vectorial::vec3f e(-1,-1,-1);
-static vectorial::vec3f f(+1,-1,-1);
-static vectorial::vec3f g(+1,-1,+1);
-static vectorial::vec3f h(-1,-1,+1);
+static vec3f a(-1,+1,-1);
+static vec3f b(+1,+1,-1);
+static vec3f c(+1,+1,+1);
+static vec3f d(-1,+1,+1);
+static vec3f e(-1,-1,-1);
+static vec3f f(+1,-1,-1);
+static vec3f g(+1,-1,+1);
+static vec3f h(-1,-1,+1);
 
-static vectorial::vec3f normals[6] =
+static vec3f normals[6] =
 {
-    vectorial::vec3f(+1,0,0),
-    vectorial::vec3f(-1,0,0),
-    vectorial::vec3f(0,+1,0),
-    vectorial::vec3f(0,-1,0),
-    vectorial::vec3f(0,0,+1),
-    vectorial::vec3f(0,0,-1)
+    vec3f(+1,0,0),
+    vec3f(-1,0,0),
+    vec3f(0,+1,0),
+    vec3f(0,-1,0),
+    vec3f(0,0,+1),
+    vec3f(0,0,-1)
 };
 
 void Render::RenderShadows( const RenderState & render_state )
 {
     // generate shadow silhoutte vertices
 
-    vectorial::vec3f world_light = light_position;
+    vec3f world_light = light_position;
     
     int vertex_index = 0;
     
@@ -528,7 +534,7 @@ void Render::RenderShadows( const RenderState & render_state )
         if ( cube.a < ShadowAlphaThreshold )
             continue;
 
-        vectorial::vec3f local_light = transformPoint( cube.inverse_transform, world_light );
+        vec3f local_light = transformPoint( cube.inverse_transform, world_light );
         
         bool dot[6];
         dot[0] = vectorial::dot( normals[0], local_light ) > 0;
@@ -561,7 +567,7 @@ void Render::RenderShadows( const RenderState & render_state )
     // upload vertices to shadow vbo
 
     glBindBuffer( GL_ARRAY_BUFFER, shadow_vbo );
-    glBufferData( GL_ARRAY_BUFFER, sizeof( vectorial::vec3f ) * vertex_index, shadow_vertices, GL_STREAM_DRAW );
+    glBufferData( GL_ARRAY_BUFFER, sizeof( vec3f ) * vertex_index, shadow_vertices, GL_STREAM_DRAW );
     glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
     // setup for zpass stencil shadow rendering in one pass
@@ -588,11 +594,11 @@ void Render::RenderShadows( const RenderState & render_state )
 
     glUseProgram( shadow_shader );
 
-    vectorial::mat4f viewMatrix = vectorial::mat4f::lookAt( camera_position, camera_lookat, camera_up );
+    mat4f viewMatrix = mat4f::lookAt( camera_position, camera_lookat, camera_up );
 
-    vectorial::mat4f projectionMatrix = vectorial::mat4f::perspective( 40.0f, display_width / (float)display_height, 0.1f, 100.0f );
+    mat4f projectionMatrix = mat4f::perspective( 40.0f, display_width / (float)display_height, 0.1f, 100.0f );
 
-    vectorial::mat4f modelViewProjection = projectionMatrix * viewMatrix;
+    mat4f modelViewProjection = projectionMatrix * viewMatrix;
 
     int location = glGetUniformLocation( shadow_shader, "ModelViewProjection" );
     if ( location >= 0 )
@@ -640,7 +646,7 @@ void Render::RenderShadowQuad()
     glEnable( GL_BLEND );
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-    vectorial::mat4f modelViewProjection = vectorial::mat4f::ortho( 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f );
+    mat4f modelViewProjection = mat4f::ortho( 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f );
 
     int location = glGetUniformLocation( debug_shader, "ModelViewProjection" );
     if ( location >= 0 )

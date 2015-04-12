@@ -43,11 +43,7 @@ void client_tick( World & world, const Input & input )
 void client_frame( World & world, const Input & input, double real_time, double frame_time )
 {
     for ( int i = 0; i < TicksPerClientFrame; ++i )
-    {
         client_tick( world, input );
-        world.time += TickDeltaTime;
-        world.tick++;
-    }
 
     world.frame++;
 }
@@ -83,11 +79,11 @@ void client_render( const World & world )
     
     render.SetLightPosition( camera.lookat + vectorial::vec3f( 25.0f, -50.0f, 100.0f ) );
 
-//    render.RenderScene( render_state );
+    render.RenderScene( render_state );
     
-//    render.RenderShadows( render_state );
+    render.RenderShadows( render_state );
 
-//    render.RenderShadowQuad();
+    render.RenderShadowQuad();
     
     render.EndScene();
 }

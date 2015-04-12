@@ -28,7 +28,7 @@ inline void world_add_cube( World & world, const vec3f & position, float size, i
 {
     CubeEntity * cube_entity = world.cube_manager->CreateCube( position, size, required_index );
     assert( cube_entity );
-    printf( "created cube: entity_index = %d, physics_index = %d\n", cube_entity->entity_index, cube_entity->physics_index );
+//    printf( "created cube: entity_index = %d, physics_index = %d\n", cube_entity->entity_index, cube_entity->physics_index );
 }
 
 inline void world_setup_cubes( World & world )

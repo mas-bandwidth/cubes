@@ -16,9 +16,11 @@ DONE:
 
     Hook up basically minimal rendering code.
 
+    It should in theory be rendering now but it's not. Why not?
+
 TODO:
 
-    It should in theory be rendering now but it's not. Why not?
+    Not sure what is going on. Shader problems?
 
     ------------------------------
 
