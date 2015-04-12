@@ -381,17 +381,12 @@ void Render::BeginScene( float x1, float y1, float x2, float y2 )
 
     glEnable( GL_DEPTH_TEST );
     glDepthFunc( GL_LESS );
-
-    printf( "begin scene\n" );
 }
         
 void Render::RenderScene( const RenderState & render_state )
 {
     if ( render_state.num_cubes == 0 )
-    {
-        printf( "zero cubes?\n" );
         return;
-    }
 
     glUseProgram( cubes_shader );
 
@@ -416,8 +411,6 @@ void Render::RenderScene( const RenderState & render_state )
 
     mat4f projection_matrix = mat4f::perspective( 40.0f, display_width / (float)display_height, 0.1f, 100.0f );
 
-    printf( "num cubes = %d\n", render_state.num_cubes );
-
     for ( int i = 0; i < render_state.num_cubes; ++i )
     {
         RenderCubeInstance & instance = instance_data[i];
@@ -441,8 +434,6 @@ void Render::RenderScene( const RenderState & render_state )
     glBindVertexArray( 0 );
 
     glUseProgram( 0 );
-
-    printf( "render scene\n" );
 
     check_opengl_error( "after render scene" );
 }

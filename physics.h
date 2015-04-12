@@ -17,8 +17,18 @@ enum PhysicsShape
 
 struct PhysicsObjectState
 {
-	bool enabled = true;
-	float scale = 1.0f;
+	PhysicsObjectState()
+	{
+		enabled = true;
+		scale = 1.0f;
+		position = vec3f(0,0,0);
+		orientation = quat4f(0,0,0,1);
+		linear_velocity = vec3f(0,0,0);
+		angular_velocity = vec3f(0,0,0);
+	}
+
+	bool enabled;
+	float scale;
 	vec3f position;
 	quat4f orientation;
 	vec3f linear_velocity;

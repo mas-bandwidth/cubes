@@ -37,6 +37,8 @@ inline void world_setup_cubes( World & world )
     const float PlayerCubeSize = 1.5f;
     const float NonPlayerCubeSize = 0.4f;
 
+    world.physics_manager->AddPlane( vec3f(0,0,1), 0 );
+
     world_add_cube( world, vectorial::vec3f(0,0,10), PlayerCubeSize, ENTITY_PLAYER_BEGIN );
 
     const float origin = -CubeSteps / 2.0f;

@@ -29,17 +29,17 @@ struct PhysicsConfig
 	PhysicsConfig()
 	{
 		ERP = 0.5f;
-		CFM = 0.01f;
+		CFM = 0.025f;
 		MaxIterations = 64;
-		MaximumCorrectingVelocity = 5.0f;
+		MaximumCorrectingVelocity = 2.5f;
 		ContactSurfaceLayer = 0.01f;
 		Elasticity = 0.0f;
-		LinearDamping = 0.01f;
-		AngularDamping = 0.01f;
+		LinearDamping = 0.001f;
+		AngularDamping = 0.001f;
 		Friction = 200.0f;
 		Gravity = 20.0f;
 		QuickStep = true;
-		RestTime = 0.1f;
+		RestTime = 0.25f;
 		LinearRestThresholdSquared = 0.25f * 0.25f;
 		AngularRestThresholdSquared = 0.25f * 0.25f;
 	}  

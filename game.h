@@ -129,11 +129,8 @@ inline void game_process_player_input( World & world, const Input & input, int p
             world.physics_manager->ApplyTorque( player_cube->physics_index, torque );
         }
 
-        // todo: this linear damping is not framerate independent
-        
-        // apply damping to player cube
-        player_cube->angular_velocity *= 0.95f;
-        player_cube->linear_velocity *= vec3f( 0.96f, 0.96f, 0.999f );
+        player_cube->angular_velocity *= 0.999f;
+        player_cube->linear_velocity *= vec3f( 0.997f, 0.997f, 0.9999f );
     }
     
     vec3f push_origin = player_cube->position;
@@ -191,6 +188,7 @@ inline void game_process_player_input( World & world, const Input & input, int p
                     }
                 }
             }
+            /*
             else if ( input.pull )
             {
                 if ( cube != player_cube )
@@ -225,6 +223,7 @@ inline void game_process_player_input( World & world, const Input & input, int p
                     }
                 }
             }
+            */
         }
     }
 }

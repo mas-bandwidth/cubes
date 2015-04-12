@@ -1,26 +1,8 @@
 DONE:
 
-    Add code to physics manager to grab state from physics objects and update cube entities.
-
-    Implement code to grab the render state from cube entities.
-
-    Renamed RenderCubes to RenderState, it's now more generic. We could render more than cubes.
-
-    Bunch of work converting over.
-
-    Added render_get_state which takes a world struct. Generic.
-
-    Actually instance the render object inside client.
-
-    Bring across camera smoothing etc.
-
-    Hook up basically minimal rendering code.
-
-    It should in theory be rendering now but it's not. Why not?
-
 TODO:
 
-    Not sure what is going on. Shader problems?
+    Cube blow seems to be pulling cube *down* towards floor? Why?
 
     ------------------------------
 

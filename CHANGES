@@ -17,6 +17,44 @@ Saturday April 11th, 2015
 
     Verified that input is getting properly sampled.
 
+    Add code to physics manager to grab state from physics objects and update cube entities.
+
+    Implement code to grab the render state from cube entities.
+
+    Renamed RenderCubes to RenderState, it's now more generic. We could render more than cubes.
+
+    Bunch of work converting over.
+
+    Added render_get_state which takes a world struct. Generic.
+
+    Actually instance the render object inside client.
+
+    Bring across camera smoothing etc.
+
+    Hook up basically minimal rendering code.
+
+    It should in theory be rendering now but it's not. Why not?
+
+    Not sure what is going on. Shader problems?
+
+    Nope. Problems with render not having display width/height set up correctly.
+
+    Cubes are now rendering in a strange way, but at least I'm seeing something.
+
+    Why are cubes rendering like this? Seems like the rotation might be off -- x,y,z,w wrong order?
+
+    Was just missing initialization for cube orientation, lin/ang vel.
+
+    Also seems like the floor is not added properly in the simulation?
+
+    Fixed. Added plane for floor.
+
+    Adjusted drag so it's less strong. Was too much @ 240HZ.
+
+    Seeing random stuff that looks like the delta time for frames is way off. eg. fast/slow.
+
+    Some tuning of physics parameters, drag etc.
+
 
 Thursday April 9th, 2015
 ------------------------

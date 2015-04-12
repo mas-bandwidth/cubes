@@ -25,17 +25,15 @@ void framebuffer_size_callback( GLFWwindow * window, int width, int height )
 {
     global.display_width = width;
     global.display_height = height;
-
-    glViewport( 0, 0, width, height );
-
-    render.ResizeDisplay( width, height );
 }
 
 void client_tick( World & world, const Input & input )
 {
-    printf( "%llu-%llu: %f [%+.4f]\n", world.frame, world.tick, world.time, TickDeltaTime );
+//    printf( "%llu-%llu: %f [%+.4f]\n", world.frame, world.tick, world.time, TickDeltaTime );
 
-    game_process_player_input( world, input, 0 );
+    const int player_id = 0;
+
+    game_process_player_input( world, input, player_id );
 
     world_tick( world );
 }
@@ -72,6 +70,8 @@ void client_render( const World & world )
 
     RenderState render_state;
     render_get_state( world, render_state );
+
+    render.ResizeDisplay( global.display_width, global.display_height );
 
     render.BeginScene( 0, 0, global.display_width, global.display_height );
 

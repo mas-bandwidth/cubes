@@ -46,6 +46,7 @@ struct CubeManager
                 allocated[i] = true;
                 entity_index_to_cube_index[entity_index] = i;
                 cubes[i].entity_index = entity_index;
+                cubes[i].scale = size;
 
                 PhysicsObjectState initial_state;
                 initial_state.position = position;
