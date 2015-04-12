@@ -5,7 +5,7 @@
 #define dSINGLE
 #include <ode/ode.h>
 
-const int MaxContacts = 16;
+const int MaxContacts = 32;
 
 // todo: stuff to look into dBodySetMovedCallback, dBodySetGyroscopicMode
 
@@ -29,8 +29,8 @@ struct PhysicsConfig
 	PhysicsConfig()
 	{
 		ERP = 0.5f;
-		CFM = 0.025f;
-		MaxIterations = 64;
+		CFM = 0.015f;
+		MaxIterations = 16;
 		MaximumCorrectingVelocity = 2.5f;
 		ContactSurfaceLayer = 0.01f;
 		Elasticity = 0.0f;
@@ -39,9 +39,9 @@ struct PhysicsConfig
 		Friction = 200.0f;
 		Gravity = 20.0f;
 		QuickStep = true;
-		RestTime = 0.25f;
-		LinearRestThresholdSquared = 0.25f * 0.25f;
-		AngularRestThresholdSquared = 0.25f * 0.25f;
+		RestTime = 0.1;
+		LinearRestThresholdSquared = 0.1f * 0.1f;
+		AngularRestThresholdSquared = 0.1f * 0.1f;
 	}  
 };
 
@@ -277,7 +277,7 @@ void PhysicsManager::Update( uint64_t tick, double t, float dt, bool paused )
 		dWorldStep( internal->world, dt );
 }
 
-int PhysicsManager::AddObject( const PhysicsObjectState & object_state, PhysicsShape shape )
+int PhysicsManager::AddObject( const PhysicsObjectState & object_state, PhysicsShape shape, float scale )
 {
 	assert( shape == PHYSICS_SHAPE_CUBE );		// no other shape supported yet!
 
@@ -306,14 +306,14 @@ int PhysicsManager::AddObject( const PhysicsObjectState & object_state, PhysicsS
 
 	dMass mass;
 	const float density = 1.0f;
-	dMassSetBox( &mass, density, object_state.scale, object_state.scale, object_state.scale );
+	dMassSetBox( &mass, density, scale, scale, scale );
 	dBodySetMass( internal->objects[index].body, &mass );
 	dBodySetData( internal->objects[index].body, (void*) index );
 
 	// setup geom and attach to body
 
-	internal->objects[index].scale = object_state.scale;
-	internal->objects[index].geom = dCreateBox( internal->space, object_state.scale, object_state.scale, object_state.scale );
+	internal->objects[index].scale = scale;
+	internal->objects[index].geom = dCreateBox( internal->space, scale, scale, scale );
 
 	dGeomSetBody( internal->objects[index].geom, internal->objects[index].body );	
 
@@ -352,7 +352,7 @@ void PhysicsManager::RemoveObject( int index )
 	internal->objects[index].geom = 0;
 }
 
-void PhysicsManager::GetObjectState( int index, PhysicsObjectState & object_state )
+void PhysicsManager::GetObjectState( int index, PhysicsObjectState & object_state ) const
 {
 	assert( index >= 0 );
 	assert( index < (int) internal->objects.size() );
@@ -369,7 +369,7 @@ void PhysicsManager::GetObjectState( int index, PhysicsObjectState & object_stat
 	object_state.linear_velocity = vec3f( linear_velocity[0], linear_velocity[1], linear_velocity[2] );
 	object_state.angular_velocity = vec3f( angular_velocity[0], angular_velocity[1], angular_velocity[2] );
 
-	object_state.enabled = internal->objects[index].timeAtRest < internal->config.RestTime;
+	object_state.active = internal->objects[index].timeAtRest < internal->config.RestTime;
 }
 
 void PhysicsManager::SetObjectState( int index, const PhysicsObjectState & object_state )
@@ -390,7 +390,7 @@ void PhysicsManager::SetObjectState( int index, const PhysicsObjectState & objec
 	dBodySetLinearVel( internal->objects[index].body, object_state.linear_velocity.x(), object_state.linear_velocity.y(), object_state.linear_velocity.z() );
 	dBodySetAngularVel( internal->objects[index].body, object_state.angular_velocity.x(), object_state.angular_velocity.y(), object_state.angular_velocity.z() );
 
-	if ( object_state.enabled )
+	if ( object_state.active )
 	{
 		internal->objects[index].timeAtRest = 0.0f;
 		dBodyEnable( internal->objects[index].body );
@@ -400,6 +400,14 @@ void PhysicsManager::SetObjectState( int index, const PhysicsObjectState & objec
 		internal->objects[index].timeAtRest = internal->config.RestTime;
 		dBodyDisable( internal->objects[index].body );
 	}
+}
+
+bool PhysicsManager::IsActive( int index ) const
+{
+	assert( index >= 0 );
+	assert( index < (int) internal->objects.size() );
+	assert( internal->objects[index].exists() );
+	return internal->objects[index].timeAtRest < internal->config.RestTime;
 }
 
 const std::vector<uint16_t> & PhysicsManager::GetObjectInteractions( int index ) const

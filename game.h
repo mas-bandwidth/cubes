@@ -42,7 +42,7 @@ struct Input
 
 inline void game_process_player_input( World & world, const Input & input, int player_id )
 {
-    const double t = world.time;
+    // const double t = world.time;
     
     assert( world.entity_manager );
     assert( world.physics_manager );
@@ -79,6 +79,7 @@ inline void game_process_player_input( World & world, const Input & input, int p
     {
         // todo: driving wobble from tick is bad so I changed to t but needs to be retuned.
 
+/*
         // bobbing force on player cube
         {
             const float wobble_x = sin(t*0.1+1) + sin(t*0.05f+3) + sin(t+10);
@@ -96,6 +97,7 @@ inline void game_process_player_input( World & world, const Input & input, int p
             vec3f torque = vec3f( wobble_x, wobble_y, wobble_z ) * 1.5f;
             world.physics_manager->ApplyTorque( player_cube->physics_index, torque );
         }
+        */
 
         // todo: untangle wtf this is supposed to do
         /*
@@ -117,6 +119,7 @@ inline void game_process_player_input( World & world, const Input & input, int p
         }
         */
         
+        /*
         // stay upright torque on player cube
         vec3f target_up(0,0,1);
         {
@@ -128,12 +131,13 @@ inline void game_process_player_input( World & world, const Input & input, int p
             vec3f torque = - 100 * axis * angle;
             world.physics_manager->ApplyTorque( player_cube->physics_index, torque );
         }
+        */
 
         player_cube->angular_velocity *= 0.999f;
-        player_cube->linear_velocity *= vec3f( 0.997f, 0.997f, 0.9999f );
+        player_cube->linear_velocity *= vec3f( 0.99f, 0.99f, 0.99975f );
     }
     
-    vec3f push_origin = player_cube->position;
+    vec3f push_origin = vec3f( player_cube->position.x(), player_cube->position.y(), 0 );
 
     push_origin += vec3f( 0, 0, -0.1f );
 
@@ -147,6 +151,8 @@ inline void game_process_player_input( World & world, const Input & input, int p
             if ( world.entity_manager->GetType( i ) != ENTITY_TYPE_CUBE )
                 continue;
 
+            // todo: can actually directly iterate across cubes here instead. much better
+
             auto cube = (CubeEntity*) world.entity_manager->GetEntity( i );
 
             assert( cube );
@@ -158,7 +164,14 @@ inline void game_process_player_input( World & world, const Input & input, int p
                 vec3f difference = cube->position - push_origin;
 
                 if ( cube == player_cube )
-                    difference -= vec3f( 0, 0, 0.7f );
+                {
+                    const float d = 1.25f;
+                    const float e = 0.1f;
+                    if ( difference.z() > d + e )
+                        difference -= vec3f( 0, 0, d );
+                    else
+                        difference = vec3f( difference.x(), difference.y(), e );
+                }
                 
                 const float distance_squared = length_squared( difference );
 
@@ -168,7 +181,7 @@ inline void game_process_player_input( World & world, const Input & input, int p
 
                     vec3f direction = difference / distance;
 
-                    float magnitude = 1.0f / distance_squared * 200.0f;
+                    float magnitude = 1.0f / distance_squared * 150.0f;
                     if ( magnitude > 500.0f )
                         magnitude = 500.0f;
 
@@ -176,6 +189,8 @@ inline void game_process_player_input( World & world, const Input & input, int p
 
                     if ( cube != player_cube )
                         force *= mass;
+                    else
+                        force *= 1.5f;
 
                     if ( cube == player_cube && input.pull )
                         force *= 20;

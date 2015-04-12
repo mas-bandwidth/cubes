@@ -24,43 +24,43 @@ inline void world_init( World & world )
     world.physics_manager->Initialize();
 }
 
-inline void world_add_cube( World & world, const vec3f & position, float size, int required_index = ENTITY_NULL )
+inline void world_add_cube( World & world, const vec3f & position, float scale, bool active, int required_index = ENTITY_NULL )
 {
-    CubeEntity * cube_entity = world.cube_manager->CreateCube( position, size, required_index );
-    assert( cube_entity );
-//    printf( "created cube: entity_index = %d, physics_index = %d\n", cube_entity->entity_index, cube_entity->physics_index );
+    world.cube_manager->CreateCube( position, scale, active, required_index );
 }
 
 inline void world_setup_cubes( World & world )
 {
-    const int CubeSteps = 30;
     const float PlayerCubeSize = 1.5f;
     const float NonPlayerCubeSize = 0.4f;
 
     world.physics_manager->AddPlane( vec3f(0,0,1), 0 );
 
-    world_add_cube( world, vectorial::vec3f(0,0,10), PlayerCubeSize, ENTITY_PLAYER_BEGIN );
+    world_add_cube( world, vectorial::vec3f(0,0,10), PlayerCubeSize, true, ENTITY_PLAYER_BEGIN );
 
-    const float origin = -CubeSteps / 2.0f;
+    const int grid_size = 30;
+    const float origin = -grid_size / 2.0f + 0.5f;
     const float z = NonPlayerCubeSize / 2.0f;
-    const int count = CubeSteps;
     
-    for ( int y = 0; y < count; ++y )
+    for ( int y = 0; y < grid_size; ++y )
     {
-        for ( int x = 0; x < count; ++x )
+        for ( int x = 0; x < grid_size; ++x )
         {
-            world_add_cube( world, vec3f(x+origin+0.5f,y+origin+0.5f,z), NonPlayerCubeSize );
+            world_add_cube( world, vec3f( x + origin, y + origin, z ), NonPlayerCubeSize, false );
         }
     }
 }
 
 inline void world_tick( World & world )
 {
+    world.cube_manager->PrePhysicsUpdate();
+
     world.physics_manager->Update( world.tick, world.time, TickDeltaTime );
-    world.time += TickDeltaTime;
-    world.tick++;
 
     world.cube_manager->PostPhysicsUpdate();
+
+    world.time += TickDeltaTime;
+    world.tick++;
 }
 
 inline void world_free( World & world )

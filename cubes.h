@@ -32,7 +32,7 @@ struct CubeManager
             entity_index_to_cube_index[i] = -1;
     }
 
-    CubeEntity * CreateCube( const vec3f & position, float size, int required_entity_index = ENTITY_NULL )
+    CubeEntity * CreateCube( const vec3f & position, float scale, bool active, int required_entity_index = ENTITY_NULL )
     {
         const int entity_index = entity_manager->Allocate( required_entity_index );
 
@@ -46,14 +46,14 @@ struct CubeManager
                 allocated[i] = true;
                 entity_index_to_cube_index[entity_index] = i;
                 cubes[i].entity_index = entity_index;
-                cubes[i].scale = size;
 
                 PhysicsObjectState initial_state;
+                initial_state.active = active;
                 initial_state.position = position;
-                initial_state.scale = size;
-                initial_state.enabled = true;
-                
-                cubes[i].physics_index = physics_manager->AddObject( initial_state, PHYSICS_SHAPE_CUBE );
+
+                cubes[i].physics_index = physics_manager->AddObject( initial_state, PHYSICS_SHAPE_CUBE, scale );
+                cubes[i].position = position;
+                cubes[i].scale = scale;
                 
                 entity_manager->SetEntity( entity_index, &cubes[i], ENTITY_TYPE_CUBE );
 
@@ -77,6 +77,25 @@ struct CubeManager
         entity_index_to_cube_index[entity_index] = -1;
         cubes[cube_index] = CubeEntity();
         entity_manager->Free( entity_index );
+    }
+
+    void PrePhysicsUpdate()
+    {
+        PhysicsObjectState object_state;
+
+        for ( int i = 0; i < MaxCubes; ++i )
+        {
+            if ( !allocated[i] )
+                continue;
+
+            object_state.active = physics_manager->IsActive( cubes[i].physics_index );
+            object_state.position = cubes[i].position;
+            object_state.orientation = cubes[i].orientation;
+            object_state.linear_velocity = cubes[i].linear_velocity;
+            object_state.angular_velocity = cubes[i].angular_velocity;
+
+            physics_manager->SetObjectState( cubes[i].physics_index, object_state );
+        }
     }
 
     void PostPhysicsUpdate()

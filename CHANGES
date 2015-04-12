@@ -1,4 +1,52 @@
 
+Sunday April 12th, 2015
+-----------------------
+
+    Big initial hitch when the game starts. 
+
+    Unfortunately, this may mean that we're CPU bound when all cubes are moving.
+
+    Find out!
+
+    Confirmed. This is actually bad news. It means we're CPU bound on the physics.
+
+    Maybe Rubikon will be better...
+
+    Cube blow seems to be pulling cube *down* towards floor? Why?
+
+    Cause caused by cube blow origin being set to same position as the player cube, instead
+    of being the projection of the player cube position onto the z=0 plane.
+
+    Bring back linear drag. Required to slow the cube in the air while hovering.
+
+    Linear drag is not applying because I'm not pushing back the object state
+    from the cube entities to the simulation before physics update.
+
+    Implement pre-physics update for cubes.
+
+    Fixed a bunch of errors where initial entity state was not correctly setup.
+
+    Remove scale from physics state. It's not part of physics state, it's part of physics init for object only.
+
+    Now tune the player cube drag.
+
+    Fixed by reducing player iterations down to 16. Was 64. 
+
+    Figure there are enough ticks between render steps that less iterations per-tick are acceptable.
+
+    Disable everything except the cube blow lift.
+
+    Retune the jump and hover forces and drag. It's a bit draggy right now. Needs less drag. More spring.
+
+    Got it basically back into the right area. Could probably use more fine tuning later.
+
+    Getting some penetration with the player cube and the ground.
+
+    May need to cosmetically enhance this, eg. if player cube center is below minimum z, clamp it.
+
+    Fixed by making small adjustment to CFM
+
+
 Saturday April 11th, 2015
 -------------------------
 

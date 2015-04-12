@@ -19,16 +19,14 @@ struct PhysicsObjectState
 {
 	PhysicsObjectState()
 	{
-		enabled = true;
-		scale = 1.0f;
+		active = true;
 		position = vec3f(0,0,0);
 		orientation = quat4f(0,0,0,1);
 		linear_velocity = vec3f(0,0,0);
 		angular_velocity = vec3f(0,0,0);
 	}
 
-	bool enabled;
-	float scale;
+	bool active;
 	vec3f position;
 	quat4f orientation;
 	vec3f linear_velocity;
@@ -48,7 +46,7 @@ public:
 
 	void Update( uint64_t tick, double t, float dt, bool paused = false );
 
-	int AddObject( const PhysicsObjectState & object_state, PhysicsShape shape );
+	int AddObject( const PhysicsObjectState & object_state, PhysicsShape shape, float scale );
 
 	bool ObjectExists( int index );
 
@@ -56,9 +54,11 @@ public:
 
 	void RemoveObject( int index );
 	
-	void GetObjectState( int index, PhysicsObjectState & object_state );
+	void GetObjectState( int index, PhysicsObjectState & object_state ) const;
 
 	void SetObjectState( int index, const PhysicsObjectState & object_state );
+
+	bool IsActive( int index ) const;
 
 	const std::vector<uint16_t> & GetObjectInteractions( int index ) const;
 

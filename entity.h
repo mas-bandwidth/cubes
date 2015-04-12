@@ -33,6 +33,10 @@ struct Entity
         authority = 0;
         entity_index = ENTITY_WORLD;
         physics_index = PHYSICS_NULL;
+        position = vec3f(0,0,0);
+        orientation = quat4f(0,0,0,1);
+        linear_velocity = vec3f(0,0,0);
+        angular_velocity = vec3f(0,0,0);
     }
 
     int authority;

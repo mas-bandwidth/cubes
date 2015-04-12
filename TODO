@@ -1,18 +1,22 @@
 DONE:
 
-TODO:
+TODO:    
 
-    Cube blow seems to be pulling cube *down* towards floor? Why?
+    Bring back player cube linear bobbing. Retune it.
+
+    Bring back player cube angular bobbing. Retune it.
+
+    Bring back player cube rotation to face the current direction of movement (eg. anticipation/work)
+
+    Bring back the player stay upright torque. Retune it.
 
     ------------------------------
 
-    Bring across authority colors and blending (in a general way such that all objects can have authority)
+    Bring across authority colors and alpha blending (in a general way such that all objects can have authority)
 
     ------------------------------
 
-    Tune the client simulation now that it is running at 240HZ
-
-    Pass over code and fix any TODOs or hacks.
+    Update the cube player cube so that it works on a per-cube basis, or maybe even a per-physics object basis?
 
     ------------------------------
 
