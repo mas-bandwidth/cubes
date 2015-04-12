@@ -57,6 +57,8 @@ inline void world_tick( World & world )
     world.physics_manager->Update( world.tick, world.time, TickDeltaTime );
     world.time += TickDeltaTime;
     world.tick++;
+
+    world.cube_manager->PostPhysicsUpdate();
 }
 
 inline void world_free( World & world )

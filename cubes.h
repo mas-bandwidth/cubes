@@ -9,8 +9,8 @@
 
 struct CubeEntity : public Entity
 {
-    float size;
-    CubeEntity() : size( 1.0f ) {}
+    float scale;
+    CubeEntity() : scale( 1.0f ) {}
 };
 
 struct CubeManager
@@ -78,9 +78,22 @@ struct CubeManager
         entity_manager->Free( entity_index );
     }
 
-    void Update( double t, float dt )
+    void PostPhysicsUpdate()
     {
-        // ...
+        PhysicsObjectState object_state;
+
+        for ( int i = 0; i < MaxCubes; ++i )
+        {
+            if ( !allocated[i] )
+                continue;
+
+            physics_manager->GetObjectState( cubes[i].physics_index, object_state );
+
+            cubes[i].position = object_state.position;
+            cubes[i].orientation = object_state.orientation;
+            cubes[i].linear_velocity = object_state.linear_velocity;
+            cubes[i].angular_velocity = object_state.angular_velocity;
+        }
     }
 };
 

@@ -1,14 +1,30 @@
 DONE:
 
-TODO:
-
-    ------------------------------
-
     Add code to physics manager to grab state from physics objects and update cube entities.
 
+    Implement code to grab the render state from cube entities.
+
+    Renamed RenderCubes to RenderState, it's now more generic. We could render more than cubes.
+
+    Bunch of work converting over.
+
+    Added render_get_state which takes a world struct. Generic.
+
+    Actually instance the render object inside client.
+
+    Bring across camera smoothing etc.
+
+    Hook up basically minimal rendering code.
+
+TODO:
+
+    It should in theory be rendering now but it's not. Why not?
+
     ------------------------------
 
-    Hook up the client render to the cube entities
+    Bring across authority colors and blending (in a general way such that all objects can have authority)
+
+    ------------------------------
 
     Tune the client simulation now that it is running at 240HZ
 

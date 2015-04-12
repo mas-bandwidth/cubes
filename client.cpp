@@ -9,6 +9,10 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+Render render;
+
+Camera camera;
+
 struct Global
 {
     int display_width;
@@ -23,6 +27,8 @@ void framebuffer_size_callback( GLFWwindow * window, int width, int height )
     global.display_height = height;
 
     glViewport( 0, 0, width, height );
+
+    render.ResizeDisplay( width, height );
 }
 
 void client_tick( World & world, const Input & input )
@@ -54,11 +60,36 @@ void client_clear()
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 }
 
-void client_render()
+void client_render( const World & world )
 {
     client_clear();
 
-    // ...
+    CubeEntity * player = (CubeEntity*) world.entity_manager->GetEntity( ENTITY_PLAYER_BEGIN );
+
+    vec3f origin = player ? player->position : vec3f(0,0,0);
+
+    vec3f lookat = origin - vec3f(0,0,1);
+
+    vec3f position = lookat + vec3f(0,-11,5);
+
+    camera.EaseIn( lookat, position );
+
+    RenderState render_state;
+    render_get_state( world, render_state );
+
+    render.BeginScene( 0, 0, global.display_width, global.display_height );
+
+    render.SetCamera( camera.position, camera.lookat, camera.up );
+    
+    render.SetLightPosition( camera.lookat + vectorial::vec3f( 25.0f, -50.0f, 100.0f ) );
+
+//    render.RenderScene( render_state );
+    
+//    render.RenderShadows( render_state );
+
+//    render.RenderShadowQuad();
+    
+    render.EndScene();
 }
 
 Input client_sample_input( GLFWwindow * window )
@@ -129,6 +160,8 @@ int client_main( int argc, char ** argv )
     glewExperimental = GL_TRUE;
     glewInit();
 
+    clear_opengl_error();
+
     client_clear();
 
     double previous_frame_time = platform_time();
@@ -149,7 +182,7 @@ int client_main( int argc, char ** argv )
 
         client_frame( world, input, frame_start_time, world.frame * ClientFrameDeltaTime );
 
-        client_render();
+        client_render( world );
 
         glfwPollEvents();
 

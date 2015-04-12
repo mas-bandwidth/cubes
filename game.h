@@ -154,7 +154,7 @@ inline void game_process_player_input( World & world, const Input & input, int p
 
             assert( cube );
 
-            const float mass = cube->size * cube->size * cube->size;
+            const float mass = cube->scale * cube->scale * cube->scale;
 
             if ( input.push )
             {

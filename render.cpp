@@ -1,8 +1,42 @@
 #include "render.h"
+#include "world.h"
 #include <stdio.h>
 #include <assert.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
+void render_get_state( const World & world, RenderState & render_state )
+{
+    render_state.num_cubes = 0;
+
+    for ( int i = 0; i < MaxCubes; ++i )
+    {
+        if ( !world.cube_manager->allocated[i] )
+            continue;
+
+        CubeEntity & cube_entity = world.cube_manager->cubes[i];
+
+        mat4f translation = mat4f::translation( cube_entity.position );
+        mat4f rotation = mat4f::rotation( cube_entity.orientation );
+        mat4f scale = mat4f::scale( cube_entity.scale * 0.5f );
+
+        mat4f inv_translation = vectorial::mat4f::translation( -cube_entity.position );
+        mat4f inv_rotation = transpose( rotation );
+        mat4f inv_scale = mat4f::scale( 1.0f / ( cube_entity.scale * 0.5f ) );
+
+        RenderCube & render_cube = render_state.cube[render_state.num_cubes];
+
+        render_cube.transform = translation * rotation * scale;
+        render_cube.inverse_transform = inv_rotation * inv_translation * inv_scale;
+        
+        render_cube.r = 0.75f;    //object->r;
+        render_cube.g = 0.75f;    //object->g;
+        render_cube.b = 0.75f;    //object->b;
+        render_cube.a = 1.0f;     //object->a;
+
+        render_state.num_cubes++;
+    }
+}
 
 struct CubeVertex
 {
@@ -117,15 +151,22 @@ void Render::Initialize()
 {
     assert( !initialized );
 
-    shadow_shader = load_shader( "shaders/shadow.vert", "shaders/shadow.frag" );
+    check_opengl_error( "before load shaders" );
+
     cubes_shader = load_shader( "shaders/cubes.vert", "shaders/cubes.frag" );
+    shadow_shader = load_shader( "shaders/shadow.vert", "shaders/shadow.frag" );
     debug_shader = load_shader( "shaders/debug.vert", "shaders/debug.frag" );
 
-    assert( shadow_shader );
     assert( cubes_shader );
+    assert( shadow_shader );
     assert( debug_shader );
 
     if ( !shadow_shader || !cubes_shader || !debug_shader )
+        return;
+
+    check_opengl_error( "after load shaders" );
+
+    if ( !cubes_shader )
         return;
 
     // setup cubes draw call
@@ -192,14 +233,14 @@ void Render::Initialize()
             if ( model_view_location >= 0 )
             {
                 glEnableVertexAttribArray( model_view_location + i );
-                glVertexAttribPointer( model_view_location + i, 4, GL_FLOAT, GL_FALSE, sizeof( RenderCubeInstance ), (void*) ( offsetof( RenderCubeInstance, modelView ) + ( sizeof(float) * 4 * i ) ) );
+                glVertexAttribPointer( model_view_location + i, 4, GL_FLOAT, GL_FALSE, sizeof( RenderCubeInstance ), (void*) ( offsetof( RenderCubeInstance, model_view ) + ( sizeof(float) * 4 * i ) ) );
                 glVertexAttribDivisor( model_view_location + i, 1 );
             }
 
             if ( model_view_projection_location >= 0 )
             {
                 glEnableVertexAttribArray( model_view_projection_location + i );
-                glVertexAttribPointer( model_view_projection_location + i, 4, GL_FLOAT, GL_FALSE, sizeof( RenderCubeInstance ), (void*) ( offsetof( RenderCubeInstance, modelViewProjection ) + ( sizeof(float) * 4 * i ) ) );
+                glVertexAttribPointer( model_view_projection_location + i, 4, GL_FLOAT, GL_FALSE, sizeof( RenderCubeInstance ), (void*) ( offsetof( RenderCubeInstance, model_view_projection ) + ( sizeof(float) * 4 * i ) ) );
                 glVertexAttribDivisor( model_view_projection_location + i, 1 );
             }
         }
@@ -210,6 +251,8 @@ void Render::Initialize()
 
         glUseProgram( 0 );
     }
+
+    check_opengl_error( "after cube render setup" );
 
     // setup shadow draw call
     {
@@ -237,6 +280,8 @@ void Render::Initialize()
 
         glUseProgram( 0 );
     }
+
+    check_opengl_error( "after shadow render setup" );
 
     // setup mask draw call
     {
@@ -287,9 +332,9 @@ void Render::Initialize()
         glUseProgram( 0 );
     }
 
+    check_opengl_error( "after shadow mask render init" );
+    
     initialized = true;
-
-    check_opengl_error( "after cubes render init" );
 }
 
 void Render::ResizeDisplay( int _display_width, int _display_height )
@@ -336,11 +381,13 @@ void Render::BeginScene( float x1, float y1, float x2, float y2 )
 
     glEnable( GL_DEPTH_TEST );
     glDepthFunc( GL_LESS );
+
+    printf( "begin scene\n" );
 }
         
-void Render::RenderScene( const RenderCubes & cubes )
+void Render::RenderScene( const RenderState & render_state )
 {
-    if ( cubes.num_cubes == 0 )
+    if ( render_state.num_cubes == 0 )
         return;
 
     glUseProgram( cubes_shader );
@@ -362,29 +409,29 @@ void Render::RenderScene( const RenderCubes & cubes )
         glUniform3fv( light_location, 1, data );
     }
 
-    vectorial::mat4f viewMatrix = vectorial::mat4f::lookAt( camera_position, camera_lookat, camera_up );
+    vectorial::mat4f view_matrix = vectorial::mat4f::lookAt( camera_position, camera_lookat, camera_up );
 
-    vectorial::mat4f projectionMatrix = vectorial::mat4f::perspective( 40.0f, display_width / (float)display_height, 0.1f, 100.0f );
+    vectorial::mat4f projection_matrix = vectorial::mat4f::perspective( 40.0f, display_width / (float)display_height, 0.1f, 100.0f );
 
-    for ( int i = 0; i < cubes.num_cubes; ++i )
+    for ( int i = 0; i < render_state.num_cubes; ++i )
     {
         RenderCubeInstance & instance = instance_data[i];
-        instance.r = cubes.cube[i].r;
-        instance.g = cubes.cube[i].g;
-        instance.b = cubes.cube[i].b;
-        instance.a = cubes.cube[i].a;
-        instance.model = cubes.cube[i].transform;
-        instance.modelView = viewMatrix * instance.model;
-        instance.modelViewProjection = projectionMatrix * instance.modelView;
+        instance.r = render_state.cube[i].r;
+        instance.g = render_state.cube[i].g;
+        instance.b = render_state.cube[i].b;
+        instance.a = render_state.cube[i].a;
+        instance.model = render_state.cube[i].transform;
+        instance.model_view = view_matrix * instance.model;
+        instance.model_view_projection = projection_matrix * instance.model_view;
     }
 
     glBindBuffer( GL_ARRAY_BUFFER, cubes_instance_buffer );
-    glBufferData( GL_ARRAY_BUFFER, sizeof(RenderCubeInstance) * cubes.num_cubes, instance_data, GL_STREAM_DRAW );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(RenderCubeInstance) * render_state.num_cubes, instance_data, GL_STREAM_DRAW );
     glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
     glBindVertexArray( cubes_vao );
 
-    glDrawElementsInstanced( GL_TRIANGLES, sizeof( cube_indices ) / 2, GL_UNSIGNED_SHORT, nullptr, cubes.num_cubes );
+    glDrawElementsInstanced( GL_TRIANGLES, sizeof( cube_indices ) / 2, GL_UNSIGNED_SHORT, nullptr, render_state.num_cubes );
 
     glBindVertexArray( 0 );
 
@@ -466,7 +513,7 @@ static vectorial::vec3f normals[6] =
     vectorial::vec3f(0,0,-1)
 };
 
-void Render::RenderShadows( const RenderCubes & cubes )
+void Render::RenderShadows( const RenderState & render_state )
 {
     // generate shadow silhoutte vertices
 
@@ -474,9 +521,9 @@ void Render::RenderShadows( const RenderCubes & cubes )
     
     int vertex_index = 0;
     
-    for ( int i = 0; i < (int) cubes.num_cubes; ++i )
+    for ( int i = 0; i < (int) render_state.num_cubes; ++i )
     {
-        const RenderCube & cube = cubes.cube[i];
+        const RenderCube & cube = render_state.cube[i];
 
         if ( cube.a < ShadowAlphaThreshold )
             continue;
@@ -720,7 +767,6 @@ uint32_t load_shader( const char * vertex_file_path, const char * fragment_file_
     glAttachShader( program_id, fragment_shader_id );
     glLinkProgram( program_id );
  
-
     GLint result = GL_FALSE;
     glGetProgramiv( program_id, GL_LINK_STATUS, &result );
     if ( result == GL_FALSE )
@@ -742,7 +788,7 @@ uint32_t load_shader( const char * vertex_file_path, const char * fragment_file_
  
     glDeleteShader( vertex_shader_id );
     glDeleteShader( fragment_shader_id );
- 
+
     return program_id;
 }
 

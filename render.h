@@ -17,23 +17,25 @@ struct RenderCube
     mat4f inverse_transform;
 };
 
-struct RenderCubes
+struct RenderState
 {
-    RenderCubes()
+    RenderState()
     {
         num_cubes = 0;
     }
 
     int num_cubes;
-    RenderCube cube[MaxViewObjects];
+    RenderCube cube[MaxCubes];
 };
+
+void render_get_state( const struct World & world, RenderState & render_state );
 
 struct RenderCubeInstance
 {
     float r,g,b,a;
     mat4f model;
-    mat4f modelView;
-    mat4f modelViewProjection;
+    mat4f model_view;
+    mat4f model_view_projection;
 };
 
 class Render
@@ -43,19 +45,19 @@ public:
     Render();
     ~Render();
 
-    void ResizeDisplay( int displayWidth, int displayHeight );
+    void ResizeDisplay( int display_width, int display_height );
     
     void SetLightPosition( const vec3f & position );
 
-    void SetCamera( const vec3f & position, const vec3f & lookAt, const vec3f & up );
+    void SetCamera( const vec3f & position, const vec3f & lookat, const vec3f & up );
 
     void ClearScreen();
 
     void BeginScene( float x1, float y1, float x2, float y2 );
  
-    void RenderScene( const RenderCubes & cubes );
+    void RenderScene( const RenderState & render_state );
     
-    void RenderShadows( const RenderCubes & cubes );
+    void RenderShadows( const RenderState & render_state );
 
     void RenderShadowQuad();
 
@@ -94,6 +96,40 @@ private:
     vec3f shadow_vertices[MaxCubeShadowVertices];
 
     RenderCubeInstance instance_data[MaxCubes];
+};
+
+struct Camera
+{
+    vec3f position;
+    vec3f lookat;
+    vec3f up;
+
+    Camera()
+    {
+        position = vec3f::zero();
+        lookat = vec3f::zero();
+        up = vec3f(0,0,1);
+    }
+
+    void EaseIn( const vec3f & new_lookat, const vec3f & new_position )
+    {
+        const float epsilon = 0.00001f;
+
+        if ( length_squared( new_lookat - lookat ) > epsilon )
+            lookat += ( new_lookat - lookat ) * 0.15f;
+
+        if ( length_squared( new_position - position ) > epsilon )
+            position += ( new_position - position ) * 0.15f;
+        
+        up = cross( position - lookat, vec3f(1,0,0) );
+    }
+
+    void Snap( const vec3f & new_lookat, const vec3f & new_position )
+    {
+        lookat = new_lookat;
+        position = new_position;
+        up = cross( position - lookat, vec3f(1,0,0) );
+    }
 };
 
 void clear_opengl_error();
