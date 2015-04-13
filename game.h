@@ -129,6 +129,8 @@ inline void game_process_player_input( World & world, const Input & input, int p
 
     push_origin += vec3f( 0, 0, -0.1f );
 
+    const int player_authority = ENTITY_PLAYER_BEGIN + player_id;
+
     if ( input.push || input.pull )
     {
         for ( int i = 0; i < MaxEntities; ++i )
@@ -179,13 +181,13 @@ inline void game_process_player_input( World & world, const Input & input, int p
                         force *= 1.5f;
 
                     if ( cube == player_cube && input.pull )
-                        force *= 5;
+                        force *= 2;
 
-                    if ( cube->authority == 0 || cube->authority == player_id )
+                    const int authority = world.entity_manager->GetAuthority( i );
+                    if ( authority == 0 || authority == player_authority )
                     {
                         world.physics_manager->ApplyForce( cube->physics_index, force );
-                        cube->authority = player_id;
-                        // todo: authority time needed? probably.
+                        world.entity_manager->SetAuthority( i, player_authority );
                     }
                 }
             }
@@ -209,16 +211,16 @@ inline void game_process_player_input( World & world, const Input & input, int p
 
                         float magnitude = 1.0f / distance_squared * 200.0f;
                         
-                        if ( magnitude > 2000.0f )
-                            magnitude = 2000.0f;
+                        if ( magnitude > 1000.0f )
+                            magnitude = 1000.0f;
 
                         vec3f force = - direction * magnitude;
 
-                        if ( cube->authority == player_id || cube->authority == MaxPlayers )
+                        const int authority = world.entity_manager->GetAuthority( i );
+                        if ( authority == player_authority || authority == 0 )
                         {
                             world.physics_manager->ApplyForce( cube->physics_index, force * mass );
-                            cube->authority = player_id;
-                            // todo: authority time needed? probably.
+                            world.entity_manager->SetAuthority( i, player_authority );
                         }
                     }
                 }

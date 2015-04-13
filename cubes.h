@@ -115,6 +115,30 @@ struct CubeManager
             cubes[i].angular_velocity = object_state.angular_velocity;
         }
     }
+
+    void UpdateAuthority( double t, float dt )
+    {
+        for ( int i = 0; i < MaxCubes; ++i )
+        {
+            if ( !allocated[i] )
+                continue;
+
+            const int authority = entity_manager->GetAuthority( cubes[i].entity_index );
+            if ( authority == 0 )
+                continue;
+
+            bool active = physics_manager->IsActive( cubes[i].physics_index );
+            if ( active )
+                continue;
+
+            float & authority_time = entity_manager->authority_time[cubes[i].entity_index];
+
+            authority_time += dt;
+
+            if ( authority_time > AuthorityThreshold )
+                entity_manager->SetAuthority( cubes[i].entity_index, 0 );
+        }
+    }
 };
 
 #endif // #ifndef CUBES_H

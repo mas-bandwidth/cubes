@@ -27,6 +27,8 @@ static const int MaxViewObjects = MaxEntities;
 static const int MaxCubeShadowVertices = 1024 * 32;
 static const float ShadowAlphaThreshold = 0.15f;
 
+static const float AuthorityThreshold = 0.5f;
+
 static const int MaxContexts = 8;
 static const int MaxPacketSize = 4 * 1024;
 static const int UnitsPerMeter = 512;

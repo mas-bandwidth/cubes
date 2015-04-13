@@ -40,8 +40,8 @@ struct PhysicsConfig
 		Gravity = 20.0f;
 		QuickStep = true;
 		RestTime = 0.1;
-		LinearRestThresholdSquared = 0.1f * 0.1f;
-		AngularRestThresholdSquared = 0.1f * 0.1f;
+		LinearRestThresholdSquared = 0.25f * 0.25f;
+		AngularRestThresholdSquared = 0.25f * 0.25f;
 	}  
 };
 
@@ -184,6 +184,7 @@ void PhysicsManager::Initialize()
 	dWorldSetContactMaxCorrectingVel( internal->world, config.MaximumCorrectingVelocity );
 	dWorldSetLinearDamping( internal->world, config.LinearDamping );
 	dWorldSetAngularDamping( internal->world, config.AngularDamping );
+	dWorldSetAutoDisableFlag( internal->world, 0 );
 
 	// setup contacts
 
@@ -209,62 +210,63 @@ void PhysicsManager::Update( uint64_t tick, double t, float dt, bool paused )
 	if ( paused )
 		return;
 
-	// IMPORTANT: do this *first* before updating simulation then at rest calculations
-	// will work properly with rough quantization (quantized state is fed in prior to update)
 	for ( int i = 0; i < (int) internal->objects.size(); ++i )
 	{
-		if ( internal->objects[i].exists() )
+		if ( !internal->objects[i].exists() )
+			continue;
+
+		if ( !IsActive( i ) )
+			continue;
+
+		const dReal * linearVelocity = dBodyGetLinearVel( internal->objects[i].body );
+		const dReal * angularVelocity = dBodyGetAngularVel( internal->objects[i].body );
+
+		const float linearVelocityLengthSquared = linearVelocity[0]*linearVelocity[0] + linearVelocity[1]*linearVelocity[1] + linearVelocity[2]*linearVelocity[2];
+		const float angularVelocityLengthSquared = angularVelocity[0]*angularVelocity[0] + angularVelocity[1]*angularVelocity[1] + angularVelocity[2]*angularVelocity[2];
+
+		if ( linearVelocityLengthSquared > MaxLinearSpeed * MaxLinearSpeed )
 		{
-			const dReal * linearVelocity = dBodyGetLinearVel( internal->objects[i].body );
-			const dReal * angularVelocity = dBodyGetAngularVel( internal->objects[i].body );
+			const float linearSpeed = sqrt( linearVelocityLengthSquared );
 
-			const float linearVelocityLengthSquared = linearVelocity[0]*linearVelocity[0] + linearVelocity[1]*linearVelocity[1] + linearVelocity[2]*linearVelocity[2];
-			const float angularVelocityLengthSquared = angularVelocity[0]*angularVelocity[0] + angularVelocity[1]*angularVelocity[1] + angularVelocity[2]*angularVelocity[2];
+			const float scale = MaxLinearSpeed / linearSpeed;
 
-			if ( linearVelocityLengthSquared > MaxLinearSpeed * MaxLinearSpeed )
-			{
-				const float linearSpeed = sqrt( linearVelocityLengthSquared );
+			dReal clampedLinearVelocity[3];
 
-				const float scale = MaxLinearSpeed / linearSpeed;
+			clampedLinearVelocity[0] = linearVelocity[0] * scale;
+			clampedLinearVelocity[1] = linearVelocity[1] * scale;
+			clampedLinearVelocity[2] = linearVelocity[2] * scale;
 
-				dReal clampedLinearVelocity[3];
+			dBodySetLinearVel( internal->objects[i].body, clampedLinearVelocity[0], clampedLinearVelocity[1], clampedLinearVelocity[2] );
 
-				clampedLinearVelocity[0] = linearVelocity[0] * scale;
-				clampedLinearVelocity[1] = linearVelocity[1] * scale;
-				clampedLinearVelocity[2] = linearVelocity[2] * scale;
-
-				dBodySetLinearVel( internal->objects[i].body, clampedLinearVelocity[0], clampedLinearVelocity[1], clampedLinearVelocity[2] );
-
-				linearVelocity = &clampedLinearVelocity[0];
-			}
-
-			if ( angularVelocityLengthSquared > MaxAngularSpeed * MaxAngularSpeed )
-			{
-				const float angularSpeed = sqrt( angularVelocityLengthSquared );
-
-				const float scale = MaxAngularSpeed / angularSpeed;
-
-				dReal clampedAngularVelocity[3];
-
-				clampedAngularVelocity[0] = angularVelocity[0] * scale;
-				clampedAngularVelocity[1] = angularVelocity[1] * scale;
-				clampedAngularVelocity[2] = angularVelocity[2] * scale;
-
-				dBodySetAngularVel( internal->objects[i].body, clampedAngularVelocity[0], clampedAngularVelocity[1], clampedAngularVelocity[2] );
-
-				angularVelocity = &clampedAngularVelocity[0];
-			}
-
-			if ( linearVelocityLengthSquared < internal->config.LinearRestThresholdSquared && angularVelocityLengthSquared < internal->config.AngularRestThresholdSquared )
-				internal->objects[i].timeAtRest += dt;
-			else
-				internal->objects[i].timeAtRest = 0.0f;
-
-			if ( internal->objects[i].timeAtRest >= internal->config.RestTime )
-				dBodyDisable( internal->objects[i].body );
-			else
-				dBodyEnable( internal->objects[i].body );
+			linearVelocity = &clampedLinearVelocity[0];
 		}
+
+		if ( angularVelocityLengthSquared > MaxAngularSpeed * MaxAngularSpeed )
+		{
+			const float angularSpeed = sqrt( angularVelocityLengthSquared );
+
+			const float scale = MaxAngularSpeed / angularSpeed;
+
+			dReal clampedAngularVelocity[3];
+
+			clampedAngularVelocity[0] = angularVelocity[0] * scale;
+			clampedAngularVelocity[1] = angularVelocity[1] * scale;
+			clampedAngularVelocity[2] = angularVelocity[2] * scale;
+
+			dBodySetAngularVel( internal->objects[i].body, clampedAngularVelocity[0], clampedAngularVelocity[1], clampedAngularVelocity[2] );
+
+			angularVelocity = &clampedAngularVelocity[0];
+		}
+
+		if ( linearVelocityLengthSquared < internal->config.LinearRestThresholdSquared && angularVelocityLengthSquared < internal->config.AngularRestThresholdSquared )
+			internal->objects[i].timeAtRest += dt;
+		else
+			internal->objects[i].timeAtRest = 0.0f;
+
+		if ( internal->objects[i].timeAtRest >= internal->config.RestTime )
+			dBodyDisable( internal->objects[i].body );
+		else
+			dBodyEnable( internal->objects[i].body );
 	}
 
 	dJointGroupEmpty( internal->contacts );
@@ -315,7 +317,7 @@ int PhysicsManager::AddObject( const PhysicsObjectState & object_state, PhysicsS
 	internal->objects[index].scale = scale;
 	internal->objects[index].geom = dCreateBox( internal->space, scale, scale, scale );
 
-	dGeomSetBody( internal->objects[index].geom, internal->objects[index].body );	
+	dGeomSetBody( internal->objects[index].geom, internal->objects[index].body );
 
 	// set object state
 
@@ -369,7 +371,7 @@ void PhysicsManager::GetObjectState( int index, PhysicsObjectState & object_stat
 	object_state.linear_velocity = vec3f( linear_velocity[0], linear_velocity[1], linear_velocity[2] );
 	object_state.angular_velocity = vec3f( angular_velocity[0], angular_velocity[1], angular_velocity[2] );
 
-	object_state.active = internal->objects[index].timeAtRest < internal->config.RestTime;
+	object_state.active = dBodyIsEnabled( internal->objects[index].body );
 }
 
 void PhysicsManager::SetObjectState( int index, const PhysicsObjectState & object_state )
@@ -390,12 +392,9 @@ void PhysicsManager::SetObjectState( int index, const PhysicsObjectState & objec
 	dBodySetLinearVel( internal->objects[index].body, object_state.linear_velocity.x(), object_state.linear_velocity.y(), object_state.linear_velocity.z() );
 	dBodySetAngularVel( internal->objects[index].body, object_state.angular_velocity.x(), object_state.angular_velocity.y(), object_state.angular_velocity.z() );
 
-	if ( object_state.active )
-	{
-		internal->objects[index].timeAtRest = 0.0f;
-		dBodyEnable( internal->objects[index].body );
-	}
-	else
+	// todo: under some circumstances if this object is currently disabled but the set object state is enabled, we may want to enable it
+
+	if ( !object_state.active )
 	{
 		internal->objects[index].timeAtRest = internal->config.RestTime;
 		dBodyDisable( internal->objects[index].body );
@@ -407,7 +406,7 @@ bool PhysicsManager::IsActive( int index ) const
 	assert( index >= 0 );
 	assert( index < (int) internal->objects.size() );
 	assert( internal->objects[index].exists() );
-	return internal->objects[index].timeAtRest < internal->config.RestTime;
+	return dBodyIsEnabled( internal->objects[index].body );
 }
 
 const std::vector<uint16_t> & PhysicsManager::GetObjectInteractions( int index ) const

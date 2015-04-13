@@ -53,11 +53,15 @@ inline void world_setup_cubes( World & world )
 
 inline void world_tick( World & world )
 {
+    world.cube_manager->UpdateAuthority( world.time, TickDeltaTime );
+
     world.cube_manager->PrePhysicsUpdate();
 
     world.physics_manager->Update( world.tick, world.time, TickDeltaTime );
 
     world.cube_manager->PostPhysicsUpdate();
+
+    world.entity_manager->UpdateAuthority( world.time, TickDeltaTime );
 
     world.time += TickDeltaTime;
     world.tick++;

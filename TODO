@@ -4,13 +4,8 @@ TODO:
 
     ------------------------------
 
-    Bring across authority colors and alpha blending (in a general way such that all objects can have authority)
-
-    Authority manager?
-
-    Array of data indexed by entity index?
-
-    Yes. I think this is the way.
+    Implement code that walks the authority interactions from the physics engine and turns
+    these objects to red authority (and clears authority accum)
 
     ------------------------------
 
@@ -21,6 +16,18 @@ TODO:
     Should now basically have the same cube simulation going again, but now at 240HZ.
 
     Stop and evaluate. Is there anything else that should be done and cleaned up before going further?
+
+    ------------------------------
+
+    The at rest handling seems flakey.
+
+    Perhaps best to switch over to ODEs internal at rest handling?
+
+    ------------------------------
+
+    Some things that should be cleaned up...
+
+    physics_ode.cpp uses a bunch of C++ vector classes for authority walk. Can probably do better than this.
 
     ------------------------------
 

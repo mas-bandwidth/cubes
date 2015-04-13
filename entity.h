@@ -30,7 +30,6 @@ struct Entity
 {
     Entity()
     {
-        authority = 0;
         entity_index = ENTITY_WORLD;
         physics_index = PHYSICS_NULL;
         position = vec3f(0,0,0);
@@ -39,7 +38,6 @@ struct Entity
         angular_velocity = vec3f(0,0,0);
     }
 
-    int authority;
     int physics_index;
     int entity_index;
     vec3f position;
@@ -55,6 +53,8 @@ struct EntityManager
     uint8_t flags[MaxEntities];
     uint8_t types[MaxEntities];
     uint8_t sequence[MaxEntities];
+    int authority[MaxEntities];
+    float authority_time[MaxEntities];
     Entity * entities[MaxEntities];
 
     EntityManager()
@@ -62,6 +62,8 @@ struct EntityManager
         memset( flags, 0, sizeof( flags ) );
         memset( types, 0, sizeof( types ) );
         memset( sequence, 0, sizeof( sequence ) );
+        memset( authority, 0, sizeof( authority ) );
+        memset( authority_time, 0, sizeof( authority_time ) );
         memset( entities, 0, sizeof( entities ) );
     }
 
@@ -137,6 +139,29 @@ struct EntityManager
         assert( index >= 0 );
         assert( index < MaxEntities );
         return entities[index];
+    }
+
+    int GetAuthority( int index )
+    {
+        assert( index >= 0 );
+        assert( index < MaxEntities );
+        return authority[index];
+    }
+
+    void SetAuthority( int index, int value )
+    {
+        assert( index >= 0 );
+        assert( index < MaxEntities );
+        assert( value >= ENTITY_WORLD );
+        assert( value < ENTITY_PLAYER_END );
+        authority[index] = value;
+        authority_time[index] = 0;
+    }
+
+    void UpdateAuthority( double t, float dt )
+    {
+        for ( int i = ENTITY_PLAYER_BEGIN; i < ENTITY_PLAYER_END; ++i )
+            SetAuthority( i, i );
     }
 };
 

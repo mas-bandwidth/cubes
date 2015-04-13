@@ -1,4 +1,31 @@
 
+Sunday Evening, April 12th, 2015
+--------------------------------
+
+    Added authority int and authority time to entity manager. 
+
+    Seems overkill to have a separate authority manager.
+
+    Fixed up cube game code to modify these authority via get/set authority on entity manager.
+
+    Added code to force player objects to be forced to have their own authority each update.
+
+    Quickly hack up code that colors cubes according to authority, ignoring blending.
+
+    Whenever authority is set to a non-zero value, clear the authority time to 0.
+
+    Implement code to walk over all cubes, for cubes that are at rest but have non-zero
+    authority, increment authority time by dt.
+
+    Once authority time exceeds AuthorityThreshold return to 0 authority and clear
+    authority time.
+
+    Fixed a bug with at rest that was breaking this. Setting object state each frame
+    was happening, and it was clearing at rest flag for everything. 
+
+    This probably also explains perf problems.
+
+
 Sunday Afternoon, April 12th, 2015
 ----------------------------------
 

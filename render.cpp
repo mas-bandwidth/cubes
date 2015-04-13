@@ -5,6 +5,47 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+static void get_authority_color( int authority, float & r, float & g, float & b )
+{
+    assert( authority >= 0 );
+    assert( authority <= MaxPlayers );
+    
+    if ( authority == 0 )
+    {
+        r = 0.75f;
+        g = 0.75f;
+        b = 0.8f;
+    }
+    else if ( authority == 1 )
+    {
+        r = 0.9f;
+        g = 0.0f;
+        b = 0.0f;
+    }
+    else if ( authority == 2 )
+    {
+        r = 0.3f;
+        g = 0.3f;
+        b = 1.0f;
+    }
+    else if ( authority == 3 )
+    {
+        r = 0.0f;
+        g = 0.9f;
+        b = 0.1f;
+    }
+    else if ( authority == 4 )
+    {
+        r = 1.0f;
+        g = 0.95f;
+        b = 0.2f;
+    }
+    else
+    {
+        assert( false );
+    }
+}
+
 void render_get_state( const World & world, RenderState & render_state )
 {
     render_state.num_cubes = 0;
@@ -28,11 +69,12 @@ void render_get_state( const World & world, RenderState & render_state )
 
         render_cube.transform = translation * rotation * scale;
         render_cube.inverse_transform = inv_rotation * inv_translation * inv_scale;
+
+        int authority = world.entity_manager->GetAuthority( cube_entity.entity_index );
         
-        render_cube.r = 0.75f;    //object->r;
-        render_cube.g = 0.75f;    //object->g;
-        render_cube.b = 0.75f;    //object->b;
-        render_cube.a = 1.0f;     //object->a;
+        get_authority_color( authority, render_cube.r, render_cube.g, render_cube.b );
+
+        render_cube.a = 1.0f;
 
         render_state.num_cubes++;
     }
