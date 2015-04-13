@@ -7,8 +7,6 @@
 
 const int MaxContacts = 32;
 
-// todo: stuff to look into dBodySetMovedCallback, dBodySetGyroscopicMode
-
 struct PhysicsConfig
 {
 	float ERP;
@@ -94,10 +92,17 @@ struct PhysicsInternal
 	};
 
 	PhysicsConfig config;
+
+	// todo: MaxPlanes
 	std::vector<dGeomID> planes;
+
+	// todo: MaxPhysicsObjects
 	std::vector<ObjectData> objects;
+
+	// todo: better data structure per-this, eg. max interactions per-object (MaxContacts?)
 	std::vector< std::vector<uint16_t> > interactions;
 
+	// todo: does this really need to be in the class? why? seems like stack local
     dContact contact[MaxContacts];			
 
 	void UpdateInteractionPairs( dBodyID b1, dBodyID b2 )
@@ -279,7 +284,7 @@ void PhysicsManager::Update( uint64_t tick, double t, float dt, bool paused )
 		dWorldStep( internal->world, dt );
 }
 
-int PhysicsManager::AddObject( const PhysicsObjectState & object_state, PhysicsShape shape, float scale )
+int PhysicsManager::AddObject( int entity_index, const PhysicsObjectState & object_state, PhysicsShape shape, float scale )
 {
 	assert( shape == PHYSICS_SHAPE_CUBE );		// no other shape supported yet!
 
@@ -392,7 +397,7 @@ void PhysicsManager::SetObjectState( int index, const PhysicsObjectState & objec
 	dBodySetLinearVel( internal->objects[index].body, object_state.linear_velocity.x(), object_state.linear_velocity.y(), object_state.linear_velocity.z() );
 	dBodySetAngularVel( internal->objects[index].body, object_state.angular_velocity.x(), object_state.angular_velocity.y(), object_state.angular_velocity.z() );
 
-	// todo: under some circumstances if this object is currently disabled but the set object state is enabled, we may want to enable it
+	// todo: under some circumstances if this object is currently disabled but the set object state is enabled, we want to enable it
 
 	if ( !object_state.active )
 	{
@@ -460,3 +465,70 @@ void PhysicsManager::Reset()
 
 	internal->planes.clear();
 }
+
+/*
+			// interaction based authority for active objects
+
+			if ( InGame() && !GetFlag( FLAG_DisableInteractionAuthority ) )
+			{
+				for ( int playerId = 0; playerId < MaxPlayers; ++playerId )
+				{
+					std::vector<bool> interacting( maxActiveId + 1, false );
+					std::vector<bool> ignores( maxActiveId + 1, false );
+					std::vector<int> queue( activeObjects.GetCount() );
+					int head = 0;
+					int tail = 0;
+
+					for ( int i = 0; i < activeObjects.GetCount(); ++i )
+					{
+						ActiveObject & activeObject = activeObjects.GetObject( i );
+						const int activeId = activeObject.activeId;
+						assert( activeId >= 0 );
+						assert( activeId < (int) ignores.size() );
+						assert( activeId < (int) interacting.size() );
+						if ( activeObject.authority == playerId )
+						{
+							interacting[activeId] = true;
+							assert( head < activeObjects.GetCount() );
+							queue[head++] = activeObject.activeId;
+						}
+						else if ( activeObject.authority != MaxPlayers || activeObject.enabled == 0 )
+						{
+							ignores[activeId] = true;
+						}
+					}
+					
+					while ( head != tail )
+					{
+						const std::vector<uint16_t> & objectInteractions = simulation->GetObjectInteractions( queue[tail] );
+						for ( int i = 0; i < (int) objectInteractions.size(); ++i )
+						{
+							const int activeId = objectInteractions[i];
+							assert( activeId >= 0 );
+							assert( activeId < (int) interacting.size() );
+							if ( !ignores[activeId] && !interacting[activeId] )
+							{
+								assert( head < activeObjects.GetCount() );
+								queue[head++] = activeId;
+							}
+							interacting[activeId] = true;
+						}
+						tail++;
+					}
+					
+					for ( int i = 0; i <= maxActiveId; ++i )
+					{
+						if ( interacting[i] )
+						{
+							int index = activeIdToIndex[i];
+							ActiveObject & activeObject = activeObjects.GetObject( index );
+							if ( activeObject.authority == MaxPlayers || activeObject.authority == playerId )
+							{
+								activeObject.authority = playerId;
+								if ( activeObject.enabled )
+									activeObject.authorityTime = 0;
+							}
+						}
+					}
+				}
+*/

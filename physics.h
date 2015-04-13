@@ -46,7 +46,7 @@ public:
 
 	void Update( uint64_t tick, double t, float dt, bool paused = false );
 
-	int AddObject( const PhysicsObjectState & object_state, PhysicsShape shape, float scale );
+	int AddObject( int entity_index, const PhysicsObjectState & object_state, PhysicsShape shape, float scale );
 
 	bool ObjectExists( int index );
 

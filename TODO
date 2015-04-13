@@ -1,8 +1,17 @@
 DONE:
 
+    Added entity_index to add object for physics.
+
+    This is necessary because authority interaction needs to walk physics object
+    and get back to entity index, so we need a mapping physics_index -> entity_index.
+
+    This is best done inside the physics manager.
+
 TODO:    
 
     ------------------------------
+
+
 
     Implement code that walks the authority interactions from the physics engine and turns
     these objects to red authority (and clears authority accum)
