@@ -42,7 +42,7 @@ struct Input
 
 inline void game_process_player_input( World & world, const Input & input, int player_id )
 {
-    // const double t = world.time;
+    const double t = world.time * 60;
     
     assert( world.entity_manager );
     assert( world.physics_manager );
@@ -77,9 +77,6 @@ inline void game_process_player_input( World & world, const Input & input, int p
 
     if ( input.push )
     {
-        // todo: driving wobble from tick is bad so I changed to t but needs to be retuned.
-
-/*
         // bobbing force on player cube
         {
             const float wobble_x = sin(t*0.1+1) + sin(t*0.05f+3) + sin(t+10);
@@ -88,7 +85,7 @@ inline void game_process_player_input( World & world, const Input & input, int p
             vec3f force = vec3f( wobble_x, wobble_y, wobble_z ) * 2.0f;
             world.physics_manager->ApplyForce( player_cube->physics_index, force );
         }
-        
+
         // bobbing torque on player cube
         {
             const float wobble_x = sin(t*0.05+10) + sin(t*0.05f+22)  + sin(t*1.1f);
@@ -97,33 +94,24 @@ inline void game_process_player_input( World & world, const Input & input, int p
             vec3f torque = vec3f( wobble_x, wobble_y, wobble_z ) * 1.5f;
             world.physics_manager->ApplyTorque( player_cube->physics_index, torque );
         }
-        */
 
-        // todo: untangle wtf this is supposed to do
-        /*
         // calculate velocity tilt for player cube
-
-        vec3f targetUp(0,0,1);
-        {
-            vec3f strafe( force.x(), force.y(), 0 );
-            float speed = velocity.length();
-            if ( length_speed > 0.001f )
-            {
-                math::Vector axis = -force[playerId].cross( math::Vector(0,0,1) );
-                axis.normalize();
-                float tilt = speed * 0.1f;
-                if ( tilt > 0.25f )
-                    tilt = 0.25f;
-                targetUp = math::Quaternion( tilt, axis ).transform( targetUp );
-            }
-        }
-        */
-        
-        /*
-        // stay upright torque on player cube
         vec3f target_up(0,0,1);
         {
-            vec3f current_up = player_cube->orientation.transform( vec3f(0,0,1) );
+            vec3f strafe( force.x(), force.y(), 0 );
+            if ( length_squared( strafe ) > 0 )
+            {
+                vec3f axis = normalize( cross( -force, vec3f(0,0,1) ) );
+                float tilt = 0.2 + 0.1f * length( player_cube->linear_velocity );
+                if ( tilt > 0.4f )
+                    tilt = 0.4f;
+                target_up = transform( quat4f::axis_rotation( tilt, axis ), target_up );
+            }
+        }
+        
+        // stay upright torque on player cube
+        {
+            vec3f current_up = transform( player_cube->orientation, vec3f(0,0,1) );
             vec3f axis = cross( target_up, current_up );
             float angle = acos( dot( target_up, current_up ) );
             if ( angle > 0.5f )
@@ -131,9 +119,9 @@ inline void game_process_player_input( World & world, const Input & input, int p
             vec3f torque = - 100 * axis * angle;
             world.physics_manager->ApplyTorque( player_cube->physics_index, torque );
         }
-        */
 
-        player_cube->angular_velocity *= 0.999f;
+        // apply linear/angular drag to player while in push mode
+        player_cube->angular_velocity *= 0.99f;
         player_cube->linear_velocity *= vec3f( 0.99f, 0.99f, 0.99975f );
     }
     
@@ -150,8 +138,6 @@ inline void game_process_player_input( World & world, const Input & input, int p
 
             if ( world.entity_manager->GetType( i ) != ENTITY_TYPE_CUBE )
                 continue;
-
-            // todo: can actually directly iterate across cubes here instead. much better
 
             auto cube = (CubeEntity*) world.entity_manager->GetEntity( i );
 
@@ -193,7 +179,7 @@ inline void game_process_player_input( World & world, const Input & input, int p
                         force *= 1.5f;
 
                     if ( cube == player_cube && input.pull )
-                        force *= 20;
+                        force *= 5;
 
                     if ( cube->authority == 0 || cube->authority == player_id )
                     {
@@ -203,12 +189,11 @@ inline void game_process_player_input( World & world, const Input & input, int p
                     }
                 }
             }
-            /*
             else if ( input.pull )
             {
                 if ( cube != player_cube )
                 {
-                    vec3f origin( player_cube->position.x(), player_cube->position.y(), 0.0f );
+                    vec3f origin = player_cube->position;
 
                     vec3f difference = cube->position - origin;
 
@@ -238,8 +223,11 @@ inline void game_process_player_input( World & world, const Input & input, int p
                     }
                 }
             }
-            */
         }
+
+        // apply base linear/angular drag to player
+        player_cube->angular_velocity *= 0.99999f;
+        player_cube->linear_velocity *= vec3f( 0.99999f, 0.99999f, 0.99999f );
     }
 }
 

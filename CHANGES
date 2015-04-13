@@ -1,6 +1,22 @@
 
-Sunday April 12th, 2015
------------------------
+Sunday Afternoon, April 12th, 2015
+----------------------------------
+
+    Bring back player cube linear bobbing. Retune it.
+
+    Bring back player cube angular bobbing. Retune it.
+
+    Bring back player cube rotation to face the current direction of movement (eg. anticipation/work)
+
+    Bring back the player stay upright torque. Retune it.
+
+    Basically everything is tuned now. Not 100% perfect but pretty close. 
+
+    Even improved the velocity tilt while in push mode to look better.
+
+
+Sunday Morning, April 12th, 2015
+--------------------------------
 
     Big initial hitch when the game starts. 
 

@@ -2,21 +2,25 @@ DONE:
 
 TODO:    
 
-    Bring back player cube linear bobbing. Retune it.
-
-    Bring back player cube angular bobbing. Retune it.
-
-    Bring back player cube rotation to face the current direction of movement (eg. anticipation/work)
-
-    Bring back the player stay upright torque. Retune it.
-
     ------------------------------
 
     Bring across authority colors and alpha blending (in a general way such that all objects can have authority)
 
+    Authority manager?
+
+    Array of data indexed by entity index?
+
+    Yes. I think this is the way.
+
     ------------------------------
 
-    Update the cube player cube so that it works on a per-cube basis, or maybe even a per-physics object basis?
+    Work out how to get the alpha blending and color transition blending working again.
+
+    ------------------------------
+
+    Should now basically have the same cube simulation going again, but now at 240HZ.
+
+    Stop and evaluate. Is there anything else that should be done and cleaned up before going further?
 
     ------------------------------
 
