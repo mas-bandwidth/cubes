@@ -10,22 +10,33 @@ TODO:
 
     ------------------------------
 
-    Should now basically have the same cube simulation going again, but now at 240HZ.
+    Goal: Get the server running on EC2 and playing over the internet.
 
-    Stop and evaluate. Is there anything else that should be done and cleaned up before going further?
+    Setup an EC2 instance.
+
+    How much does an expensive compute instance cost?
+
+    Run the physics simulation with simulated random inputs, eg. katamari. make sure
+    it doesn't hitch on the instance type. Want the server CPU to be over-provisioned
+    if anything. No hitches!!!
+
+    Keep it multithreaded, eg. make sure packet processing can be overlapped with simulation.
 
     ------------------------------
 
-    Remove the simulation from the client and run it in the server
+    Bring across enough networking (network.h) for the server to listen on UDP ports.
 
-    Bring in enough networking to send packets between client and server (network.h)
+    Client should connect, get back response + token it should use for rest of communications.
 
-    Send input across to server, using redundancy encoding for lost commands (eg. acks)
+    Design connection protocol so client can use token to request a restart if at any point
+    it does not follow the server protocol, eg. server can just say, hey you should reconnect
+    to me, or client can initiate reconnect and it should always work.
 
-    Setup response packet from server -> client containing snapshot.
+    Connection should have a period where the client sends data to the server, and the 
+    server replies with a block of data to the client.
 
-    Goal is to setup a pure client/server system (with latency here) before implementing client side prediction.
+    While doing this the client should measure QoS to the server and synchronize time.
 
-    Take time to get the jitter buffer for inputs and interpolation buffer working before going further.
+    Hitching during loading are not allowed because they throw off the time synchronization.
 
     ------------------------------

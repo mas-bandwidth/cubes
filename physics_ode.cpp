@@ -100,7 +100,6 @@ struct PhysicsInternal
 	dGeomID planes[MaxPhysicsPlanes];
 	ObjectData objects[MaxPhysicsObjects];
 
-	// todo: better data structure per-this, eg. max interactions per-object (MaxContacts?)
 	std::vector< std::vector<uint16_t> > interactions;
 
     dContact contact[MaxContacts];			
