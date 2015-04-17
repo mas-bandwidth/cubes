@@ -60,10 +60,6 @@ public:
 
 	bool IsActive( int index ) const;
 
-	const std::vector<uint16_t> & GetObjectInteractions( int index ) const;
-
-	int GetNumInteractionPairs() const;
-
 	void ApplyForce( int index, const vec3f & force );
 
 	void ApplyTorque( int index, const vec3f & torque );
@@ -71,6 +67,8 @@ public:
 	void AddPlane( const vec3f & normal, float d );
 
 	void Reset();
+
+	void WalkInteractions( struct EntityManager * entity_manager );
 
 private:
 

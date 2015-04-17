@@ -4,6 +4,7 @@
 #include "assert.h"
 #define dSINGLE
 #include <ode/ode.h>
+#include "entity.h"
 
 const int MaxContacts = 32;
 
@@ -420,13 +421,6 @@ bool PhysicsManager::IsActive( int index ) const
 	return dBodyIsEnabled( internal->objects[index].body );
 }
 
-const std::vector<uint16_t> & PhysicsManager::GetObjectInteractions( int index ) const
-{
-	assert( index >= 0 );
-	assert( index < (int) internal->interactions.size() );
-	return internal->interactions[index];
-}
-
 void PhysicsManager::ApplyForce( int index, const vec3f & force )
 {
 	assert( index >= 0 );
@@ -475,69 +469,72 @@ void PhysicsManager::Reset()
 	memset( internal->entity_ids, 0, sizeof( internal->entity_ids ) );
 }
 
-/*
-			// interaction based authority for active objects
+void PhysicsManager::WalkInteractions( EntityManager * entity_manager )
+{
+	for ( int player_id = ENTITY_PLAYER_BEGIN; player_id < ENTITY_PLAYER_END; ++player_id )
+	{
+		std::vector<bool> interacting( MaxPhysicsObjects, false );
+		std::vector<bool> ignores( MaxPhysicsObjects, false );
+		std::vector<int> queue( MaxPhysicsObjects );
 
-			if ( InGame() && !GetFlag( FLAG_DisableInteractionAuthority ) )
+		int head = 0;
+		int tail = 0;
+
+		// add all physics objects that are active and have non-default authority to the list
+
+		for ( int i = 0; i < MaxPhysicsObjects; ++i )
+		{
+			if ( !internal->objects[i].exists() )
+				continue;
+
+			const int entity_index = internal->entity_ids[i];
+
+			const int authority = entity_manager->GetAuthority( entity_index );
+
+			if ( authority == player_id )
 			{
-				for ( int playerId = 0; playerId < MaxPlayers; ++playerId )
-				{
-					std::vector<bool> interacting( maxActiveId + 1, false );
-					std::vector<bool> ignores( maxActiveId + 1, false );
-					std::vector<int> queue( activeObjects.GetCount() );
-					int head = 0;
-					int tail = 0;
+				assert( head < MaxPhysicsObjects );
+				queue[head++] = i;
+			}
+			else if ( authority == 0 )
+			{
+				ignores[i] = true;
+			}
+		}
 
-					for ( int i = 0; i < activeObjects.GetCount(); ++i )
-					{
-						ActiveObject & activeObject = activeObjects.GetObject( i );
-						const int activeId = activeObject.activeId;
-						assert( activeId >= 0 );
-						assert( activeId < (int) ignores.size() );
-						assert( activeId < (int) interacting.size() );
-						if ( activeObject.authority == playerId )
-						{
-							interacting[activeId] = true;
-							assert( head < activeObjects.GetCount() );
-							queue[head++] = activeObject.activeId;
-						}
-						else if ( activeObject.authority != MaxPlayers || activeObject.enabled == 0 )
-						{
-							ignores[activeId] = true;
-						}
-					}
-					
-					while ( head != tail )
-					{
-						const std::vector<uint16_t> & objectInteractions = simulation->GetObjectInteractions( queue[tail] );
-						for ( int i = 0; i < (int) objectInteractions.size(); ++i )
-						{
-							const int activeId = objectInteractions[i];
-							assert( activeId >= 0 );
-							assert( activeId < (int) interacting.size() );
-							if ( !ignores[activeId] && !interacting[activeId] )
-							{
-								assert( head < activeObjects.GetCount() );
-								queue[head++] = activeId;
-							}
-							interacting[activeId] = true;
-						}
-						tail++;
-					}
-					
-					for ( int i = 0; i <= maxActiveId; ++i )
-					{
-						if ( interacting[i] )
-						{
-							int index = activeIdToIndex[i];
-							ActiveObject & activeObject = activeObjects.GetObject( index );
-							if ( activeObject.authority == MaxPlayers || activeObject.authority == playerId )
-							{
-								activeObject.authority = playerId;
-								if ( activeObject.enabled )
-									activeObject.authorityTime = 0;
-							}
-						}
-					}
+		// recurse into object interactions while ignoring objects
+
+		while ( head != tail )
+		{
+			const std::vector<uint16_t> & object_interactions = internal->interactions[ queue[tail] ];
+			for ( int i = 0; i < (int) object_interactions.size(); ++i )
+			{
+				const int physics_id = object_interactions[i];
+				assert( physics_id >= 0 );
+				assert( physics_id < (int) interacting.size() );
+				if ( !ignores[physics_id] && !interacting[physics_id] )
+				{
+					assert( head < MaxPhysicsObjects );
+					queue[head++] = physics_id;
 				}
-*/
+				interacting[physics_id] = true;
+			}
+			tail++;
+		}
+
+		// pass over the interacting objects and set their authority
+		
+		for ( int i = 0; i < MaxPhysicsObjects; ++i )
+		{
+			if ( interacting[i] )
+			{
+				int entity_index = internal->entity_ids[i];
+				assert( entity_index > ENTITY_WORLD );
+				assert( entity_index < MaxEntities );
+				int authority = entity_manager->GetAuthority( entity_index );
+				if ( ( authority == 0 || authority == player_id ) && IsActive( i ) )
+					entity_manager->SetAuthority( entity_index, player_id );
+			}
+		}
+	}
+}

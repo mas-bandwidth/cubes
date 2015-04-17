@@ -3,3 +3,5 @@ WOULD BE NICE
     Move the client window setup and create stuff into render.cpp
 
     Remove the vector BS in physics_ode.cpp for the authority walk. Come up with a better data structure.
+
+    physics_ode.cpp uses a bunch of C++ vector classes for authority walk. Can probably do better than this.

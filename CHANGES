@@ -1,4 +1,16 @@
 
+Friday off Work (PTO for denist in afternoon), April 18th, 2015
+---------------------------------------------------------------
+
+    Get existing code to do the authority walk working again.
+
+    It should walk physics objects but mark the authority via the entity manager so it is generic,
+    eg. not specific to cubes, but easily extended to all objects, and authority as a concept could
+    exist for non-physics objects as well.
+
+    Authority transfer is working again, and it seems much more robust now too.
+
+
 Thursday Evening, April 17th, 2015
 ----------------------------------
 

@@ -4,18 +4,6 @@ TODO:
 
     ------------------------------
 
-    Get existing code to do the authority walk working again.
-
-    It should walk physics objects but mark the authority via the entity manager so it is generic,
-    eg. not specific to cubes, but easily extended to all objects, and authority as a concept could
-    exist for non-physics objects as well.
-
-    ------------------------------
-
-    Find better data structure and implementation. Surely it can be simpler/faster.
-
-    ------------------------------
-
     Work out how to get the alpha blending and color transition blending working again.
 
     To do this we'll need the concept of per-entity view data, eg. indexed by entity id.
@@ -25,18 +13,6 @@ TODO:
     Should now basically have the same cube simulation going again, but now at 240HZ.
 
     Stop and evaluate. Is there anything else that should be done and cleaned up before going further?
-
-    ------------------------------
-
-    The at rest handling seems flakey.
-
-    Perhaps best to switch over to ODEs internal at rest handling?
-
-    ------------------------------
-
-    Some things that should be cleaned up...
-
-    physics_ode.cpp uses a bunch of C++ vector classes for authority walk. Can probably do better than this.
 
     ------------------------------
 

@@ -59,6 +59,8 @@ inline void world_tick( World & world )
 
     world.physics_manager->Update( world.tick, world.time, TickDeltaTime );
 
+    world.physics_manager->WalkInteractions( world.entity_manager );
+
     world.cube_manager->PostPhysicsUpdate();
 
     world.entity_manager->UpdateAuthority( world.time, TickDeltaTime );
