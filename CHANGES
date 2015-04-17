@@ -17,6 +17,10 @@ Thursday Evening, April 17th, 2015
 
     Forgot to enable SRGB framebuffer.
 
+    Increased max iterations to 64 because without that there is sliding and other bullshit.
+
+    Will just have to deal with the additional CPU cost.
+
 
 Sunday Evening, April 12th, 2015
 --------------------------------

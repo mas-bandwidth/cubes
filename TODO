@@ -2,15 +2,21 @@ DONE:
 
 TODO:    
 
+    Clean up the game code that applies force to lift the player cube so that it is also proportional to velocity
+
+    Make the velocity taper off as it goes to infinity. n / ( 1 + n )
+
     ------------------------------
 
+    Get existing code to do the authority walk working again.
+
+    It should walk physics objects but mark the authority via the entity manager so it is generic,
+    eg. not specific to cubes, but easily extended to all objects, and authority as a concept could
+    exist for non-physics objects as well.
 
     ------------------------------
 
-    Recover existing code that walks the authority interactions from the physics engine and turns
-    these objects to red authority (and clears authority accum). Get it working.
-
-    Now think through a better data structure and implementation. Surely it can be simpler/faster.
+    Find better data structure and implementation. Surely it can be simpler/faster.
 
     ------------------------------
 
