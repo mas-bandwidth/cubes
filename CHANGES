@@ -21,6 +21,8 @@ Thursday Evening, April 17th, 2015
 
     Will just have to deal with the additional CPU cost.
 
+    Added some code to taper down the amount of bobbing force upwards. It's still vibrant though and higher than before.
+
 
 Sunday Evening, April 12th, 2015
 --------------------------------

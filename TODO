@@ -2,10 +2,6 @@ DONE:
 
 TODO:    
 
-    Clean up the game code that applies force to lift the player cube so that it is also proportional to velocity
-
-    Make the velocity taper off as it goes to infinity. n / ( 1 + n )
-
     ------------------------------
 
     Get existing code to do the authority walk working again.

@@ -69,7 +69,7 @@ inline void game_process_player_input( World & world, const Input & input, int p
 
     if ( !input.push )
     {
-        if ( dot( player_cube->linear_velocity, force ) < 0.0f )
+        if ( dot( player_cube->linear_velocity, force ) < 100.0f )
             force *= 2.0f;
     }
 
@@ -178,10 +178,13 @@ inline void game_process_player_input( World & world, const Input & input, int p
                     if ( cube != player_cube )
                         force *= mass;
                     else
-                        force *= 1.5f;
+                        force *= 1.0f;
 
-                    if ( cube == player_cube && input.pull )
-                        force *= 2;
+                    if ( player_cube->linear_velocity.z() > 25 )
+                    {
+                        const float factor = 1 / ( 1 + player_cube->linear_velocity.z() - 25 );
+                        force *= factor;
+                    }
 
                     const int authority = world.entity_manager->GetAuthority( i );
                     if ( authority == 0 || authority == player_authority )

@@ -1,10 +1,8 @@
 POLISH
 
-Cube bounces up too high initially. 
+Seems like to get the cube to have a proper amount of push out of a katamari ball, it seems necessary to count the number
+of cubes that are in the katamari ball and get an estimate of mass. Then the force can be multiplied by this mass.
 
-If the force is a function of both height, and velocity, eg. it ramps down as the 
-cube gets vertical velocity up, then it should be possible to get it to work both
-when the cubes are in a katamari ball, and floating around normal without going
-too high in either situation.
+This is also a cool mechanic if the ball needs a way to collect cubes, and then can use these cubes to jump higher. Neat.
 
 There is a small bug with the shadow casting. Probably a wrong dot product for a certain orientation of a cube face?
