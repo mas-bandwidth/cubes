@@ -1,0 +1,10 @@
+POLISH
+
+Cube bounces up too high initially. 
+
+If the force is a function of both height, and velocity, eg. it ramps down as the 
+cube gets vertical velocity up, then it should be possible to get it to work both
+when the cubes are in a katamari ball, and floating around normal without going
+too high in either situation.
+
+There is a small bug with the shadow casting. Probably a wrong dot product for a certain orientation of a cube face?

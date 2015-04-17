@@ -166,6 +166,11 @@ int client_main( int argc, char ** argv )
     world_init( world );
     world_setup_cubes( world );
 
+    glEnable( GL_FRAMEBUFFER_SRGB );
+
+    glEnable( GL_CULL_FACE );
+    glFrontFace( GL_CW );
+
     while ( true )
     {
         glfwSwapBuffers( window );

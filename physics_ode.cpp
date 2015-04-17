@@ -28,7 +28,7 @@ struct PhysicsConfig
 	{
 		ERP = 0.5f;
 		CFM = 0.015f;
-		MaxIterations = 16;
+		MaxIterations = 64;
 		MaximumCorrectingVelocity = 2.5f;
 		ContactSurfaceLayer = 0.01f;
 		Elasticity = 0.0f;
@@ -38,8 +38,8 @@ struct PhysicsConfig
 		Gravity = 20.0f;
 		QuickStep = true;
 		RestTime = 0.1;
-		LinearRestThresholdSquared = 0.25f * 0.25f;
-		AngularRestThresholdSquared = 0.25f * 0.25f;
+		LinearRestThresholdSquared = 0.1f * 0.1f;
+		AngularRestThresholdSquared = 0.1f * 0.1f;
 	}  
 };
 
@@ -93,16 +93,15 @@ struct PhysicsInternal
 
 	PhysicsConfig config;
 
-	// todo: MaxPlanes
-	std::vector<dGeomID> planes;
-
-	// todo: MaxPhysicsObjects
-	std::vector<ObjectData> objects;
+	int num_planes;
+	int num_objects;
+	int entity_ids[MaxPhysicsObjects];
+	dGeomID planes[MaxPhysicsPlanes];
+	ObjectData objects[MaxPhysicsObjects];
 
 	// todo: better data structure per-this, eg. max interactions per-object (MaxContacts?)
 	std::vector< std::vector<uint16_t> > interactions;
 
-	// todo: does this really need to be in the class? why? seems like stack local
     dContact contact[MaxContacts];			
 
 	void UpdateInteractionPairs( dBodyID b1, dBodyID b2 )
@@ -110,11 +109,11 @@ struct PhysicsInternal
 		if ( !b1 || !b2 )
 			return;
 
-		uint64_t objectId1 = reinterpret_cast<uint64_t>( dBodyGetData( b1 ) );
-		uint64_t objectId2 = reinterpret_cast<uint64_t>( dBodyGetData( b2 ) );
+		uint64_t objectId1 = (uint64_t) dBodyGetData( b1 );
+		uint64_t objectId2 = (uint64_t) dBodyGetData( b2 );
 
-		interactions[objectId1].push_back( objectId2 );
-		interactions[objectId2].push_back( objectId1 );
+		interactions[objectId1].push_back( uint16_t( objectId2 ) );
+		interactions[objectId2].push_back( uint16_t( objectId1 ) );
 	}
 
 	static void NearCallback( void * data, dGeomID o1, dGeomID o2 )
@@ -171,6 +170,10 @@ void PhysicsManager::Initialize()
 	PhysicsConfig config;
 	internal->config = config;
 
+	internal->num_planes = 0;
+	internal->num_objects = 0;
+	memset( internal->entity_ids, 0, sizeof( internal->entity_ids ) );
+
 	// create simulation
 
 	internal->world = dWorldCreate();
@@ -200,8 +203,6 @@ void PhysicsManager::Initialize()
 		internal->contact[i].surface.bounce = config.Elasticity;
 		internal->contact[i].surface.bounce_vel = 0.001f;
     }
-
-	internal->objects.resize( 1024 );
 }
 
 void PhysicsManager::Update( uint64_t tick, double t, float dt, bool paused )
@@ -210,12 +211,12 @@ void PhysicsManager::Update( uint64_t tick, double t, float dt, bool paused )
 
 	internal->interactions.clear();
 	
-	internal->interactions.resize( internal->objects.size() );
+	internal->interactions.resize( MaxPhysicsObjects );
 
 	if ( paused )
 		return;
 
-	for ( int i = 0; i < (int) internal->objects.size(); ++i )
+	for ( int i = 0; i < MaxPhysicsObjects; ++i )
 	{
 		if ( !internal->objects[i].exists() )
 			continue;
@@ -290,8 +291,9 @@ int PhysicsManager::AddObject( int entity_index, const PhysicsObjectState & obje
 
 	// find free object slot
 
-	uint64_t index = -1;
-	for ( int i = 0; i < (int) internal->objects.size(); ++i )
+	int index = -1;
+
+	for ( int i = 0; i < MaxPhysicsObjects; ++i )
 	{
 		if ( !internal->objects[i].exists() )
 		{
@@ -299,11 +301,15 @@ int PhysicsManager::AddObject( int entity_index, const PhysicsObjectState & obje
 			break;
 		}
 	}
+
+	assert( index != -1 );
+
 	if ( index == -1 )
-	{
-		index = internal->objects.size();
-		internal->objects.resize( index + 1 );
-	}
+		return -1;
+
+	// setup entity id for this physics object
+
+	internal->entity_ids[index] = entity_index;
 
 	// setup object body
 
@@ -315,7 +321,7 @@ int PhysicsManager::AddObject( int entity_index, const PhysicsObjectState & obje
 	const float density = 1.0f;
 	dMassSetBox( &mass, density, scale, scale, scale );
 	dBodySetMass( internal->objects[index].body, &mass );
-	dBodySetData( internal->objects[index].body, (void*) index );
+	dBodySetData( internal->objects[index].body, (void*) uint64_t(index) );
 
 	// setup geom and attach to body
 
@@ -335,13 +341,13 @@ int PhysicsManager::AddObject( int entity_index, const PhysicsObjectState & obje
 
 bool PhysicsManager::ObjectExists( int index )
 {
-	assert( index >= 0 && index < (int) internal->objects.size() );
+	assert( index >= 0 && index < MaxPhysicsObjects );
 	return internal->objects[index].exists();
 }
 
 float PhysicsManager::GetObjectMass( int index )
 {
-	assert( index >= 0 && index < (int) internal->objects.size() );
+	assert( index >= 0 && index < MaxPhysicsObjects );
 	assert( internal->objects[index].exists() );
 	dMass mass;
 	dBodyGetMass( internal->objects[index].body, &mass );
@@ -350,7 +356,7 @@ float PhysicsManager::GetObjectMass( int index )
 
 void PhysicsManager::RemoveObject( int index )
 {
-	assert( index >= 0 && index < (int) internal->objects.size() );
+	assert( index >= 0 && index < MaxPhysicsObjects );
 	assert( internal->objects[index].exists() );
 
 	dBodyDestroy( internal->objects[index].body );
@@ -362,7 +368,7 @@ void PhysicsManager::RemoveObject( int index )
 void PhysicsManager::GetObjectState( int index, PhysicsObjectState & object_state ) const
 {
 	assert( index >= 0 );
-	assert( index < (int) internal->objects.size() );
+	assert( index < MaxPhysicsObjects );
 
 	assert( internal->objects[index].exists() );
 
@@ -382,7 +388,7 @@ void PhysicsManager::GetObjectState( int index, PhysicsObjectState & object_stat
 void PhysicsManager::SetObjectState( int index, const PhysicsObjectState & object_state )
 {
 	assert( index >= 0 );
-	assert( index < (int) internal->objects.size() );
+	assert( index < MaxPhysicsObjects );
 
 	assert( internal->objects[index].exists() );
 
@@ -409,7 +415,7 @@ void PhysicsManager::SetObjectState( int index, const PhysicsObjectState & objec
 bool PhysicsManager::IsActive( int index ) const
 {
 	assert( index >= 0 );
-	assert( index < (int) internal->objects.size() );
+	assert( index < MaxPhysicsObjects );
 	assert( internal->objects[index].exists() );
 	return dBodyIsEnabled( internal->objects[index].body );
 }
@@ -424,7 +430,7 @@ const std::vector<uint16_t> & PhysicsManager::GetObjectInteractions( int index )
 void PhysicsManager::ApplyForce( int index, const vec3f & force )
 {
 	assert( index >= 0 );
-	assert( index < (int) internal->objects.size() );
+	assert( index < MaxPhysicsObjects );
 	assert( internal->objects[index].exists() );
 	if ( length_squared( force ) > 0.000001f )
 	{
@@ -437,7 +443,7 @@ void PhysicsManager::ApplyForce( int index, const vec3f & force )
 void PhysicsManager::ApplyTorque( int index, const vec3f & torque )
 {
 	assert( index >= 0 );
-	assert( index < (int) internal->objects.size() );
+	assert( index < MaxPhysicsObjects );
 	assert( internal->objects[index].exists() );
 	if ( length_squared( torque ) > 0.000001f )
 	{
@@ -449,21 +455,24 @@ void PhysicsManager::ApplyTorque( int index, const vec3f & torque )
 
 void PhysicsManager::AddPlane( const vec3f & normal, float d )
 {
-	internal->planes.push_back( dCreatePlane( internal->space, normal.x(), normal.y(), normal.z(), d ) );
+	assert( internal->num_planes < MaxPhysicsPlanes );
+	internal->planes[internal->num_planes++] = dCreatePlane( internal->space, normal.x(), normal.y(), normal.z(), d );
 }
 
 void PhysicsManager::Reset()
 {
-	for ( int i = 0; i < (int) internal->objects.size(); ++i )
+	for ( int i = 0; i < MaxPhysicsObjects; ++i )
 	{
 		if ( internal->objects[i].exists() )
 			RemoveObject( i );
 	}
 
-	for ( int i = 0; i < (int) internal->planes.size(); ++i )
+	for ( int i = 0; i < internal->num_planes; ++i )
 		dGeomDestroy( internal->planes[i] );
 
-	internal->planes.clear();
+	internal->num_planes = 0;
+	internal->num_objects = 0;
+	memset( internal->entity_ids, 0, sizeof( internal->entity_ids ) );
 }
 
 /*

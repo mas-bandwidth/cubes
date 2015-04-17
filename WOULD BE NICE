@@ -2,4 +2,4 @@ WOULD BE NICE
 
     Move the client window setup and create stuff into render.cpp
 
-    This way GLFW is not referenced anywhere except render.cpp. Is good.
+    Remove the vector BS in physics_ode.cpp for the authority walk. Come up with a better data structure.

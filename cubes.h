@@ -51,7 +51,7 @@ struct CubeManager
                 initial_state.active = active;
                 initial_state.position = position;
 
-                cubes[i].physics_index = physics_manager->AddObject( initial_state, PHYSICS_SHAPE_CUBE, scale );
+                cubes[i].physics_index = physics_manager->AddObject( entity_index, initial_state, PHYSICS_SHAPE_CUBE, scale );
                 cubes[i].position = position;
                 cubes[i].scale = scale;
                 

@@ -1,4 +1,23 @@
 
+Thursday Evening, April 17th, 2015
+----------------------------------
+
+    Added entity_index to add object for physics.
+
+    This is necessary because authority interaction needs to walk physics object
+    and get back to entity index, so we need a mapping physics_index -> entity_index.
+
+    This is best done inside the physics manager.
+
+    To do this need a mapping from physics index back to entity index.
+
+    Added code to pass the entity index into the physics add cube.
+
+    Seems that the render is not gamma correct? Linear? Why?
+
+    Forgot to enable SRGB framebuffer.
+
+
 Sunday Evening, April 12th, 2015
 --------------------------------
 

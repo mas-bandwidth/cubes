@@ -22,6 +22,8 @@ static const double AverageSleepJitter = 2.25 * 0.001;
 static const int MaxEntities = 1024;
 static const int MaxPlayers = 2;
 static const int MaxCubes = MaxEntities;
+static const int MaxPhysicsObjects = MaxEntities;
+static const int MaxPhysicsPlanes = MaxEntities;
 
 static const int MaxViewObjects = MaxEntities;
 static const int MaxCubeShadowVertices = 1024 * 32;
