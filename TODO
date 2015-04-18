@@ -2,12 +2,6 @@ DONE:
 
 TODO:    
 
-    Polish up the instance:
-
-    alias "pm" to "premake4"
-
-    Fix up incompatibilies between GCC and clang version of server (macosx) in premake file.
-
     ------------------------------
 
     Bring across enough networking (network.h) for the server to listen on UDP ports.

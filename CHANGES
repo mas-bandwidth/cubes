@@ -18,6 +18,16 @@ Saturday Morning, April 18th, 2015
         4. sync to repo
         5. build and install ode from source
 
+    Polish up the ubuntu instance.
+
+    alias "pm" to "premake4" (~/.bash_aliases)
+
+    Fix up incompatibilies between GCC and clang version of server (macosx) in premake file.
+
+    Remove the passphrase on the key I use to access github. 
+
+    Annoying to have to enter the password everytime I want to access the git repo.
+
 
 Friday off Work (PTO for denist in afternoon), April 18th, 2015
 ---------------------------------------------------------------
