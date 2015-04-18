@@ -1,4 +1,4 @@
-solution "theproduct"
+solution "cubes"
     includedirs { ".", "vectorial" }
     platforms { "x64" }
     configurations { "Release", "Debug" }
@@ -9,11 +9,11 @@ solution "theproduct"
 
 project "server"
     language "C++"
-    buildoptions "-std=c++11 -stdlib=libc++ -Wno-deprecated-declarations"
+    buildoptions "-std=c++11"
     kind "ConsoleApp"
     files { "*.cpp" }
     excludes { "client.cpp", "render.cpp" }
-    links { "ode" }
+    links { "ode", "pthread" }
     location "build"
     targetdir "bin"
     defines { "SERVER" }

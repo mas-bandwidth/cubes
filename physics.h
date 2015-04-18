@@ -3,6 +3,7 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
+#include <stdint.h>
 #include "const.h"
 #include "vectorial/vec3f.h"
 #include "vectorial/quat4f.h"

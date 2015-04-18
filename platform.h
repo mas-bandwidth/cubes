@@ -48,7 +48,7 @@ inline double platform_time()
 // ===========================================================================================================================================
 
 #include <unistd.h>
-#include <sys/time.h>
+#include <time.h>
 
 inline void platform_sleep( double time )
 {
@@ -62,7 +62,7 @@ inline double platform_time()
     if ( start == -1 )
     {
         timespec ts;
-        clock_gettime( CLOCK_MONOTONIC_RAW, &ts );
+        clock_gettime( CLOCK_MONOTONIC, &ts );
         start = ts.tv_sec + double(ts.tv_nsec) / 1000000000.0;
         return 0.0;
     }
