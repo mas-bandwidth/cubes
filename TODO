@@ -4,12 +4,6 @@ TODO:
 
     ------------------------------
 
-    Work out how to get the alpha blending and color transition blending working again.
-
-    To do this we'll need the concept of per-entity view data, eg. indexed by entity id.
-
-    ------------------------------
-
     Goal: Get the server running on EC2 and playing over the internet.
 
     Setup an EC2 instance.
