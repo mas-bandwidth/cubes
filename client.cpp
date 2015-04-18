@@ -29,7 +29,7 @@ void framebuffer_size_callback( GLFWwindow * window, int width, int height )
 
 void client_tick( World & world, const Input & input )
 {
-//    printf( "%llu-%llu: %f [%+.4f]\n", world.frame, world.tick, world.time, TickDeltaTime );
+//    printf( "%d-%d: %f [%+.4f]\n", (int) world.frame, (int) world.tick, world.time, TickDeltaTime );
 
     const int player_id = 0;
 

@@ -8,14 +8,14 @@
 
 void server_tick( World & world )
 {
-    printf( "%lu-%lu: %f [%+.4f]\n", world.frame, world.tick, world.time, TickDeltaTime );
+    printf( "%d-%d: %f [%+.4f]\n", (int) world.frame, (int) world.tick, world.time, TickDeltaTime );
 
     world_tick( world );
 }
 
 void server_frame( World & world, double real_time, double frame_time, double jitter )
 {
-    //printf( "%lu: %f [%+.2fms]\n", frame, real_time, jitter * 1000 );
+    //printf( "%d: %f [%+.2fms]\n", (int) frame, real_time, jitter * 1000 );
     
     for ( int i = 0; i < TicksPerServerFrame; ++i )
     {
@@ -63,7 +63,7 @@ int server_main( int argc, char ** argv )
 
         if ( num_dropped_frames > 0 )
         {
-            printf( "*** dropped frame %lu *** (%d)\n", world.frame, num_dropped_frames );
+            printf( "*** dropped frame %d *** (%d)\n", (int) world.frame, num_dropped_frames );
         }
 
         previous_frame_time = next_frame_time - ServerFrameDeltaTime;

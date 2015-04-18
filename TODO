@@ -2,19 +2,11 @@ DONE:
 
 TODO:    
 
-    ------------------------------
+    Polish up the instance:
 
-    Goal: Get the server running on EC2 and playing over the internet.
+    alias "pm" to "premake4"
 
-    Setup an EC2 instance.
-
-    How much does an expensive compute instance cost?
-
-    Run the physics simulation with simulated random inputs, eg. katamari. make sure
-    it doesn't hitch on the instance type. Want the server CPU to be over-provisioned
-    if anything. No hitches!!!
-
-    Keep it multithreaded, eg. make sure packet processing can be overlapped with simulation.
+    Fix up incompatibilies between GCC and clang version of server (macosx) in premake file.
 
     ------------------------------
 

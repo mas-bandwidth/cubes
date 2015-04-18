@@ -1,4 +1,24 @@
 
+Saturday Morning, April 18th, 2015
+----------------------------------
+
+    Goal: Get the server running on EC2 and playing over the internet.
+
+    Setup an EC2 instance.
+
+    How much does an basic compute instance cost?
+
+    Very little. Spot instance is 1 cent an hour? Seems reasonable.
+
+    Got an instance setup and running the server, in short:
+
+        1. install g++ (can't seem to get clang working on linux with premake4)
+        2. install git
+        3. setup key to access github for dev
+        4. sync to repo
+        5. build and install ode from source
+
+
 Friday off Work (PTO for denist in afternoon), April 18th, 2015
 ---------------------------------------------------------------
 
