@@ -36,7 +36,7 @@ int server_main( int argc, char ** argv )
     double previous_frame_time = start_time;
     double next_frame_time = previous_frame_time + ServerFrameDeltaTime;
 
-    for ( int i = 0; i < 10; ++i )
+    while ( true )
     {
         const double time_to_sleep = max( 0.0, next_frame_time - platform_time() - AverageSleepJitter );
 
