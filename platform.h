@@ -62,7 +62,7 @@ inline double platform_time()
     if ( start == -1 )
     {
         timespec ts;
-        clock_gettime( CLOCK_MONOTONIC, &ts );
+        clock_gettime( CLOCK_MONOTONIC_RAW, &ts );
         start = ts.tv_sec + double(ts.tv_nsec) / 1000000000.0;
         return 0.0;
     }
