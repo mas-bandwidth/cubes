@@ -8,7 +8,7 @@
 
 void server_tick( World & world )
 {
-    printf( "%d-%d: %f [%+.4f]\n", (int) world.frame, (int) world.tick, world.time, TickDeltaTime );
+//    printf( "%d-%d: %f [%+.4f]\n", (int) world.frame, (int) world.tick, world.time, TickDeltaTime );
 
     world_tick( world );
 }
