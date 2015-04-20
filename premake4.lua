@@ -1,4 +1,4 @@
-solution "cubes"
+solution "cu`es"
     includedirs { ".", "vectorial" }
     platforms { "x64" }
     configurations { "Release", "Debug" }
@@ -14,8 +14,6 @@ project "server"
     files { "*.cpp" }
     excludes { "client.cpp", "render.cpp" }
     links { "ode", "pthread" }
-    location "build"
-    targetdir "bin"
     defines { "SERVER" }
 
 project "client"
@@ -25,14 +23,12 @@ project "client"
     files { "*.cpp" }
     excludes { "server.cpp" }
     links { "ode", "glew", "glfw3", "GLUT.framework", "OpenGL.framework", "Cocoa.framework", "CoreVideo.framework", "IOKit.framework" }
-    location "build"
-    targetdir "bin"
     defines { "CLIENT" }
 
 if _ACTION == "clean" then
-    os.rmdir "bin"
+    os.remove "client"
+    os.remove "server"
     os.rmdir "obj"
-    os.rmdir "build"
     if not os.is "windows" then
         os.execute "rm -f *.zip"
         os.execute "rm -f *.txt"
@@ -46,34 +42,6 @@ end
 
 if not os.is "windows" then
 
-    newaction 
-    {
-        trigger     = "loc",
-        description = "Count lines of code",
-        valid_kinds = premake.action.get("gmake").valid_kinds,
-        valid_languages = premake.action.get("gmake").valid_languages,
-        valid_tools = premake.action.get("gmake").valid_tools,
-
-        execute = function ()
-            os.execute "find . -name *.h -o -name *.cpp | xargs wc -l"
-        end
-    }
-
-    newaction
-    {
-        trigger     = "zip",
-        description = "Zip up archive of this project",
-        valid_kinds = premake.action.get("gmake").valid_kinds,
-        valid_languages = premake.action.get("gmake").valid_languages,
-        valid_tools = premake.action.get("gmake").valid_tools,
-     
-        execute = function ()
-            _ACTION = "clean"
-            premake.action.call( "clean" )
-            os.execute "zip -9r theproduct.zip *"
-        end
-    }
-
     newaction
     {
         trigger     = "client",
@@ -83,8 +51,8 @@ if not os.is "windows" then
         valid_tools = premake.action.get("gmake").valid_tools,
      
         execute = function ()
-            if os.execute "make -j4 client" == 0 then
-                os.execute "bin/client"
+            if os.execute "make client" == 0 then
+                os.execute "./client"
             end
         end
     }
@@ -98,8 +66,8 @@ if not os.is "windows" then
         valid_tools = premake.action.get("gmake").valid_tools,
      
         execute = function ()
-            if os.execute "make -j4 server" == 0 then
-                os.execute "bin/server"
+            if os.execute "make server" == 0 then
+                os.execute "./server"
             end
         end
     }

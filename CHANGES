@@ -1,4 +1,42 @@
 
+Sunday Evening, April 19th, 2015
+--------------------------------
+
+    Bring across enough networking (network.h) for the server to listen on UDP ports.
+
+    This basically means address, socket class (stripped down).
+
+    Where to store the server side of the connection?
+
+    I think maybe a server struct is acceptable.
+
+    Does the server live inside the world? No. I want the server to be separate from world,
+    because world is shared between client and server. I want a server specific side to the
+    connection vs. something shared.
+
+    Added CTRL-C handling to server. Expect server will only ever run on macosx/unix.
+
+    What's the next thing I need to do?
+
+    Client needs to have a socket as well. 
+
+    Client struct, client_init, client_update, client_term.
+
+    Client should create socket with port 0. We don't care.
+
+
+Sunday Morning, April 19th, 2015
+--------------------------------
+
+Setup a nice linux instance on www.terminal.com
+
+This setup is nice because it makes it easy to stop/start linux instances
+so they run only while I'm working on them, also it makes it very easy to
+dynamically resize instances (add/remove CPU and memory) on the fly.
+
+Seems the best option for the development of the server.
+
+
 Saturday Morning, April 18th, 2015
 ----------------------------------
 

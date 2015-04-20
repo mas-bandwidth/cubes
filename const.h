@@ -3,6 +3,8 @@
 #ifndef CONST_H
 #define CONST_H
 
+static const int ServerPort = 20000;
+
 static const int ServerFramesPerSecond = 30;
 static const int ClientFramesPerSecond = 60;
 

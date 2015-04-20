@@ -1,7 +1,8 @@
 // Copyright © 2015, The Network Protocol Company, Inc. All Rights Reserved.
 
-#include "protocol.h"
 #include "platform.h"
+#include "protocol.h"
+#include "network.h"
 #include "game.h"
 #include "world.h"
 #include "render.h"
@@ -12,6 +13,22 @@
 Render render;
 
 Camera camera;
+
+struct Client
+{
+    Socket * socket = nullptr;
+};
+
+void client_init( Client & client )
+{
+     client.socket = new Socket( 0 );
+}
+
+void client_free( Client & client )
+{
+    delete client.socket;
+    client = Client();    
+}
 
 struct Global
 {
@@ -103,6 +120,10 @@ Input client_sample_input( GLFWwindow * window )
 
 int client_main( int argc, char ** argv )
 {
+    Client client;
+
+    client_init( client );
+
     glfwInit();
 
     glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
@@ -192,6 +213,8 @@ int client_main( int argc, char ** argv )
     }
 
     world_free( world );
+
+    client_free( client );
 
     glfwTerminate();
 

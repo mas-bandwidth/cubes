@@ -2,9 +2,21 @@ DONE:
 
 TODO:    
 
-    ------------------------------
+    Need to define set of packets.
 
-    Bring across enough networking (network.h) for the server to listen on UDP ports.
+    ----------------------------------------------
+
+    Would be nice to be able to connect by hostname. 
+
+    If the address to connect to does not resolve to a valid address, try running it through DNS.
+
+    Probably also need to recover some DNS resolve stuff (blocking is OK initially...)
+
+    Next need the ability to have different packet types, but don't bind up with the silly
+    packet queue processing from the previous setup, it's overkill. Instead process the packets
+    in-place from the memory buffer.
+
+    ----------------------------------------------
 
     Client should connect, get back response + token it should use for rest of communications.
 
@@ -18,5 +30,3 @@ TODO:
     While doing this the client should measure QoS to the server and synchronize time.
 
     Hitching during loading are not allowed because they throw off the time synchronization.
-
-    ------------------------------
