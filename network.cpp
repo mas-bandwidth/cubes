@@ -1,3 +1,5 @@
+// Copyright © 2015, The Network Protocol Company, Inc. All Rights Reserved.
+
 #include "network.h"
 #include <netdb.h>
 #include <arpa/inet.h>

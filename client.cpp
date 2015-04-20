@@ -21,7 +21,7 @@ struct Client
 
 void client_init( Client & client )
 {
-     client.socket = new Socket( 0 );
+    client.socket = new Socket( 0 );
 }
 
 void client_free( Client & client )

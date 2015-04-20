@@ -1,3 +1,5 @@
+// Copyright © 2015, The Network Protocol Company, Inc. All Rights Reserved.
+
 #ifndef NETWORK_H
 #define NETWORK_H
 

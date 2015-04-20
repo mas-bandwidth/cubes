@@ -2,7 +2,17 @@ DONE:
 
 TODO:    
 
-    Need to define set of packets.
+    Server needs a function to read and process packets.
+
+    server_read_packets
+
+    Client needs a function to send packets.
+
+    client_send_packet
+
+    Client also needs to read packets:
+
+    client_read_packets
 
     ----------------------------------------------
 
