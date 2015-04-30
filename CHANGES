@@ -1,4 +1,75 @@
 
+Wednesday, April 29th, 2015
+---------------------------
+
+    Sketch out client data structure with state machine.
+
+    Sketch out server data structure with client slots.
+
+    Get the client detecting time out.
+
+    Implement write packet function.
+
+    Get the client sending client connection request packets while in connection request state.
+
+    Implement read packet function.
+
+    Work out how to process packets -- seems that we need a callback or in-place processing,
+    either that or we need an allocator for packets according to type, eg. 
+
+    Actually, kept it real simple. Just call out to an extern C function.
+
+    Setup server to process connection request packet.
+
+    Verify server actually gets the packet. Yes it does.
+
+    Server is suddenly dropping a lot of frames. Why?!
+
+    It's the simulation running slow in debug.
+
+    Setup server to process connection accepted packet.
+
+    Respond immediately with connection accepted packet / connection denied according to context.
+
+    Verified client is receiving connection accepted packet.
+
+    Setup client to process connection accepted, connection denied packet.
+
+    Verify client is fully connected.
+
+    Implement server timeout of clients
+
+    Client should transition to sending input packets to server once fully connected
+
+    Server should transition client from "connecting" to "connected" once the first input packet is received
+
+    Server should start sending "snapshot" packets to client once client is fully connected.
+
+    Pare back client and server logs to minimum set
+
+    Just throw a rand() in the guid for now on client connect. Is it really necessary? Probably not.
+
+
+Sunday Lunch, April 26th, 2015
+------------------------------
+
+    Design a protocol for client connect.
+
+    Include reconnect concept. If the client is in a slot then we don't want that slot blocked until timeout.
+
+    1. connection request: client guid (uint64_t)
+
+    2. connection accepted: client guid, server guid (uint64_t)
+
+    Once we have connection response the client should be sending input packets to the server continually (60 times per-second)
+
+    Once we have first input packet the server should be replying back with snapshot packets (30 times per-second)
+
+    Implement a system for serializing packets in packets.h
+
+    Define all packet types required.
+
+
 Sunday Evening, April 19th, 2015
 --------------------------------
 
@@ -23,6 +94,22 @@ Sunday Evening, April 19th, 2015
     Client struct, client_init, client_update, client_term.
 
     Client should create socket with port 0. We don't care.
+
+    Server needs a function to read and process packets.
+
+    server_read_packets
+
+    Client needs a function to send packets.
+
+    client_send_packet
+
+    Client also needs to read packets:
+
+    client_read_packets
+
+    Setup server to respond to client when each packet is received.
+
+    Verified client and server and sending and receiving packets.
 
 
 Sunday Morning, April 19th, 2015

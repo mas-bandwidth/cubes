@@ -103,7 +103,7 @@ public:
 
     bool SendPacket( const Address & address, const uint8_t * data, int bytes );
 
-    int ReceivePacket( Address & sender, void * buffer, int buffer_size );
+    int ReceivePacket( Address & sender, uint8_t * buffer, int buffer_size );
 
     uint16_t GetPort() { return m_port; }
 

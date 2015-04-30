@@ -1,4 +1,4 @@
-solution "cu`es"
+solution "cubes"
     includedirs { ".", "vectorial" }
     platforms { "x64" }
     configurations { "Release", "Debug" }

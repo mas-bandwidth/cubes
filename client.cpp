@@ -2,26 +2,186 @@
 
 #include "platform.h"
 #include "protocol.h"
+#include "packets.h"
 #include "network.h"
 #include "game.h"
 #include "world.h"
 #include "render.h"
 #include <stdio.h>
+
+#define HEADLESS 1
+
+#if !HEADLESS
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#endif // #if !HEADLESS
 
 Render render;
 
 Camera camera;
 
+enum ClientState
+{
+    CLIENT_DISCONNECTED,
+    CLIENT_SENDING_CONNECT_REQUEST,
+    CLIENT_TIMED_OUT,
+    CLIENT_CONNECTED
+};
+
 struct Client
 {
-    Socket * socket = nullptr;
+    Socket * socket;
+    uint64_t guid;
+    ClientState state;
+    Address server_address;
+    double current_real_time;
+    double time_last_packet_received;
+
+    // todo: need to put tick in here (from world)
+
+    // todo: need sliding window of inputs here indexed by tick above
 };
 
 void client_init( Client & client )
 {
     client.socket = new Socket( 0 );
+    client.guid = rand();
+    client.state = CLIENT_DISCONNECTED;
+    client.time_last_packet_received = 0.0;
+}
+
+void client_connect( Client & client, const Address & address, double current_real_time )
+{
+    char buffer[256];
+    printf( "client connecting to %s\n", address.ToString( buffer, sizeof( buffer ) ) );
+    client.state = CLIENT_SENDING_CONNECT_REQUEST;
+    client.server_address = address;
+    client.current_real_time = current_real_time;
+    client.time_last_packet_received = current_real_time;
+}
+
+void client_disconnect( Client & client )
+{
+    client.state = CLIENT_DISCONNECTED;
+}
+
+void client_update( Client & client, double current_real_time )
+{
+    client.current_real_time = current_real_time;
+    if ( client.state != CLIENT_DISCONNECTED && client.state != CLIENT_TIMED_OUT )
+    {
+        if ( current_real_time > client.time_last_packet_received + Timeout )
+        {
+            printf( "client timed out\n" );
+            client.state = CLIENT_TIMED_OUT;
+        }
+    }
+}
+
+void client_send_packet( Client & client, Packet & packet )
+{
+    uint8_t buffer[MaxPacketSize];
+    int packet_bytes = 0;
+    WriteStream stream( buffer, MaxPacketSize );
+    if ( write_packet( stream, packet, packet_bytes ) )
+    {
+        if ( client.socket->SendPacket( client.server_address, buffer, packet_bytes ) )
+        {
+            /*
+            char address_buffer[1024];
+            printf( "sent %s packet to server %s\n", packet_type_string( packet.type ), client.server_address.ToString( address_buffer, sizeof( address_buffer ) ) );
+            */
+        }
+    }
+}
+
+void client_send_packets( Client & client )
+{
+    switch ( client.state )
+    {
+        case CLIENT_SENDING_CONNECT_REQUEST:
+        {
+            ConnectionRequestPacket packet;
+            packet.type = PACKET_TYPE_CONNECTION_REQUEST;
+            packet.client_guid = client.guid;
+            client_send_packet( client, packet );
+        }
+        break;
+
+        case CLIENT_CONNECTED:
+        {
+            InputPacket packet;
+            packet.type = PACKET_TYPE_INPUT;
+            packet.tick = 0;                        // todo: we need access to current tick and inputs for this client
+            packet.num_inputs = 1;
+            client_send_packet( client, packet );
+        }
+        break;
+
+        default:
+            break;
+    }
+}
+
+bool process_packet( const Address & from, Packet & base_packet, void * context )
+{
+    Client & client = *(Client*)context;
+
+    switch ( base_packet.type )
+    {
+        case PACKET_TYPE_CONNECTION_ACCEPTED:
+        {
+            ConnectionAcceptedPacket & packet = (ConnectionAcceptedPacket&) base_packet;
+            if ( packet.client_guid == client.guid && client.state == CLIENT_SENDING_CONNECT_REQUEST )
+            {
+                printf( "client connected\n" );
+                client.state = CLIENT_CONNECTED;
+                return true;
+            }
+        }
+        break;
+
+        case PACKET_TYPE_CONNECTION_DENIED:
+        {
+            ConnectionDeniedPacket & packet = (ConnectionDeniedPacket&) base_packet;
+            if ( packet.client_guid == client.guid && client.state == CLIENT_SENDING_CONNECT_REQUEST )
+            {
+                printf( "connection denied\n" );
+                client.state = CLIENT_DISCONNECTED;
+                return true;
+            }
+        }
+        break;
+
+        case PACKET_TYPE_SNAPSHOT:
+        {
+            //SnapshotPacket & input = (SnapshotPacket&) base_packet;
+            // todo: process snapshot packet
+            return true;
+        }
+        break;
+
+        default:
+            break;
+    }
+
+    return false;
+}
+
+void client_receive_packets( Client & client )
+{
+    uint8_t buffer[MaxPacketSize];
+
+    while ( true )
+    {
+        Address from;
+        int bytes_read = client.socket->ReceivePacket( from, buffer, sizeof( buffer ) );
+        if ( bytes_read == 0 )
+            break;
+
+        if ( read_packet( from, buffer, bytes_read, &client ) )
+            client.time_last_packet_received = client.current_real_time;
+    }
 }
 
 void client_free( Client & client )
@@ -37,12 +197,6 @@ struct Global
 };
 
 Global global;
-
-void framebuffer_size_callback( GLFWwindow * window, int width, int height )
-{
-    global.display_width = width;
-    global.display_height = height;
-}
 
 void client_tick( World & world, const Input & input )
 {
@@ -61,6 +215,14 @@ void client_frame( World & world, const Input & input, double real_time, double 
         client_tick( world, input );
 
     world.frame++;
+}
+
+#if !HEADLESS
+
+void framebuffer_size_callback( GLFWwindow * window, int width, int height )
+{
+    global.display_width = width;
+    global.display_height = height;
 }
 
 void client_clear()
@@ -118,11 +280,21 @@ Input client_sample_input( GLFWwindow * window )
     return input;
 }
 
+#endif // #if !HEADLESS
+
 int client_main( int argc, char ** argv )
 {
+    InitializeNetwork();
+
     Client client;
 
     client_init( client );
+
+    World world;
+    world_init( world );
+    world_setup_cubes( world );
+
+#if !HEADLESS
 
     glfwInit();
 
@@ -181,19 +353,23 @@ int client_main( int argc, char ** argv )
 
     client_clear();
 
-    double previous_frame_time = platform_time();
-
-    World world;
-    world_init( world );
-    world_setup_cubes( world );
-
     glEnable( GL_FRAMEBUFFER_SRGB );
 
     glEnable( GL_CULL_FACE );
     glFrontFace( GL_CW );
 
+    double previous_frame_time = platform_time();
+
+#else // #if !HEADLESS
+
+    client_connect( client, Address( "::1", ServerPort ), 0.0 );
+
+#endif // #if !HEADLESS
+
     while ( true )
     {
+#if !HEADLESS
+
         glfwSwapBuffers( window );
 
         double frame_start_time = platform_time();
@@ -202,7 +378,25 @@ int client_main( int argc, char ** argv )
 
         Input input = client_sample_input( window );
 
+#else // #if !HEADLESS
+
+        platform_sleep( 1.0 );
+
+        double frame_start_time = platform_time();
+
+        Input input;
+
+#endif // #if !HEADLESS
+
+        client_update( client, frame_start_time );
+
+        client_receive_packets( client );
+
+        client_send_packets( client );
+
         client_frame( world, input, frame_start_time, world.frame * ClientFrameDeltaTime );
+
+#if !HEADLESS
 
         client_render( world );
 
@@ -210,13 +404,19 @@ int client_main( int argc, char ** argv )
 
         if ( glfwWindowShouldClose( window ) )
             break;
+
+#endif // #if !HEADLESS
     }
 
     world_free( world );
 
     client_free( client );
 
+#if !HEADLESS
     glfwTerminate();
+#endif // #if !HEADLESS
+
+    ShutdownNetwork();
 
     return 0;
 }

@@ -9,3 +9,11 @@ WOULD BE NICE
     Remove the vector BS in physics_ode.cpp for the authority walk. Come up with a better data structure.
 
     physics_ode.cpp uses a bunch of C++ vector classes for authority walk. Can probably do better than this.
+
+    Would be very nice to be able to connect by hostname. 
+
+    If the address to connect to does not resolve to a valid address, try running it through DNS.
+
+    Ideally this could be done seamlessly inside client state machine
+
+    Ideally the DNS resolution would be non-blocking

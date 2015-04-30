@@ -4,6 +4,8 @@
 #define CONST_H
 
 static const int ServerPort = 20000;
+static const int MaxInputsPerPacket = 63;
+static const float Timeout = 5.0f;
 
 static const int ServerFramesPerSecond = 30;
 static const int ClientFramesPerSecond = 60;
@@ -21,8 +23,9 @@ static const double ServerFrameSafety = 0.5;
 
 static const double AverageSleepJitter = 2.25 * 0.001;
 
+static const int MaxClients = 32;
 static const int MaxEntities = 1024;
-static const int MaxPlayers = 2;
+static const int MaxPlayers = MaxClients;
 static const int MaxCubes = MaxEntities;
 static const int MaxPhysicsObjects = MaxEntities;
 static const int MaxPhysicsPlanes = MaxEntities;

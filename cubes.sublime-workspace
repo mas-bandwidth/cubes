@@ -520,9 +520,41 @@
 	"buffers":
 	[
 	],
-	"build_system": "",
+	"build_system": "Packages/Makefile/Make.sublime-build",
 	"build_system_choices":
 	[
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/User/Markdown Render [Grip].sublime-build",
+					""
+				],
+				[
+					"Packages/User/Markdown Render [Grip].sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/Makefile/Make.sublime-build",
+				""
+			]
+		],
 		[
 			[
 				[
@@ -650,6 +682,24 @@
 	],
 	"file_history":
 	[
+		"/Users/gaffer/git/cubes/CHANGES",
+		"/Users/gaffer/git/cubes/premake4.lua",
+		"/Users/gaffer/git/cubes/TODO",
+		"/Users/gaffer/git/cubes/server.cpp",
+		"/Users/gaffer/git/cubes/const.h",
+		"/Users/gaffer/git/cubes/client.cpp",
+		"/Users/gaffer/git/cubes/protocol.h",
+		"/Users/gaffer/git/cubes/game.cpp",
+		"/Users/gaffer/git/cubes/packets.h",
+		"/Users/gaffer/git/cubes/network.h",
+		"/Users/gaffer/git/cubes/network.cpp",
+		"/Users/gaffer/git/cubes/obj/x64/Debug/client/physics_ode.d",
+		"/Users/gaffer/git/cubes/game.h",
+		"/Users/gaffer/Desktop/physics intro draft",
+		"/Users/gaffer/git/cubes/client",
+		"/Users/gaffer/git/cubes/platform.h",
+		"/Users/gaffer/git/server.cpp",
+		"/Users/gaffer/git/cubes/.git/MERGE_MSG",
 		"/Users/gaffer/git/cubes/cubes",
 		"/Users/gaffer/git/protocol/src/Cubes/View.cpp",
 		"/Users/gaffer/git/protocol/src/Game/Render.cpp",
@@ -759,29 +809,11 @@
 		"/Users/gaffer/git/protocol/output/relative_quaternion_values.txt",
 		"/Users/gaffer/git/protocol/output/delta_relative_quaternion.txt",
 		"/Users/gaffer/git/protocol/scripts/relative_quaternion_values.txt",
-		"/Users/gaffer/git/protocol/scripts/optimize_position.txt",
-		"/Users/gaffer/git/protocol/src/Game/CommandLine.cpp",
-		"/Users/gaffer/git/protocol/external/vectorial/vec4f.h",
-		"/Users/gaffer/git/protocol/external/ode/ode/src/odemath.h",
-		"/Users/gaffer/git/protocol/external/ode/include/ode/odemath.h",
-		"/Users/gaffer/git/protocol/external/ode/GIMPACT/include/GIMPACT/gim_math.h",
-		"/Users/gaffer/git/protocol/WOULD BE NICE",
-		"/Users/gaffer/git/protocol/src/VirtualGo/RigidBody.h",
-		"/Users/gaffer/git/protocol/NEXT",
-		"/Users/gaffer/git/protocol/SNAPSHOTS",
-		"/Users/gaffer/git/protocol/external/ode/GIMPACT/include/GIMPACT/gim_tri_capsule_collision.h",
-		"/Users/gaffer/git/protocol/src/Game/InputManager.cpp",
-		"/Users/gaffer/git/protocol/external/ode/OPCODE/OPC_TriBoxOverlap.h",
-		"/Users/gaffer/git/protocol/tools/Stone/ToolMesh.h",
-		"/Users/gaffer/git/protocol/ClientServer.make",
-		"/Users/gaffer/git/protocol/scripts/quaternion_values.txt",
-		"/Users/gaffer/git/protocol/src/Game/SnapshotDemo.h",
-		"/Users/gaffer/git/protocol/src/Protocol/Stream.h",
-		"/Users/gaffer/git/protocol/src/Game/DemoManager.h"
+		"/Users/gaffer/git/protocol/scripts/optimize_position.txt"
 	],
 	"find":
 	{
-		"height": 25.0
+		"height": 35.0
 	},
 	"find_in_files":
 	{
@@ -828,6 +860,10 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"bin",
+			"build",
+			"%lu",
+			"%llu",
 			"GetObjectInteractions",
 			"getAuthorityColor",
 			"AddPlane",
@@ -951,11 +987,7 @@
 			"Save(",
 			"StateUpdate",
 			"authorityTime",
-			"CubesInternal",
-			"CubeInternal",
-			"todo",
-			"num_cubes",
-			"frame["
+			"CubesInternal"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -1060,12 +1092,84 @@
 		"selected_items":
 		[
 			[
-				"game.cpp",
-				"src/Game/Game.cpp"
+				"const.h",
+				"const.h"
+			],
+			[
+				"server.cpp",
+				"server.cpp"
+			],
+			[
+				"todo",
+				"TODO"
 			],
 			[
 				"client.cpp",
-				"src/ClientServer/Client.cpp"
+				"client.cpp"
+			],
+			[
+				"changes",
+				"CHANGES"
+			],
+			[
+				"pre",
+				"premake4.lua"
+			],
+			[
+				"client.h",
+				"obj/x64/Debug/client/physics_ode.d"
+			],
+			[
+				"packets.h",
+				"packets.h"
+			],
+			[
+				"game.h",
+				"game.h"
+			],
+			[
+				"protocol.h",
+				"protocol.h"
+			],
+			[
+				"network.h",
+				"network.h"
+			],
+			[
+				"premake4.lua",
+				"premake4.lua"
+			],
+			[
+				"network.cpp",
+				"network.cpp"
+			],
+			[
+				"client",
+				"client"
+			],
+			[
+				"too",
+				"TODO"
+			],
+			[
+				"premake.",
+				"premake4.lua"
+			],
+			[
+				"netwokr.cpp",
+				"network.cpp"
+			],
+			[
+				"netwokr.h",
+				"network.h"
+			],
+			[
+				"platform.h",
+				"platform.h"
+			],
+			[
+				"game.cpp",
+				"src/Game/Game.cpp"
 			],
 			[
 				"render.cpp",
@@ -1076,24 +1180,12 @@
 				"src/Cubes/View.cpp"
 			],
 			[
-				"todo",
-				"TODO"
-			],
-			[
 				"view.h",
 				"src/Cubes/View.h"
 			],
 			[
-				"game.h",
-				"src/Cubes/Game.h"
-			],
-			[
 				"render",
 				"src/Game/Render.cpp"
-			],
-			[
-				"changes",
-				"CHANGES"
 			],
 			[
 				"sub",
@@ -1136,10 +1228,6 @@
 				"src/Game/SyncDemo.cpp"
 			],
 			[
-				"pre",
-				"premake4.lua"
-			],
-			[
 				"snapshot.h",
 				"src/Game/Snapshot.h"
 			],
@@ -1154,10 +1242,6 @@
 			[
 				"demo.cpp",
 				"src/Game/SyncDemo.cpp"
-			],
-			[
-				"premake4.lua",
-				"premake4.lua"
 			],
 			[
 				"premake",
@@ -1518,58 +1602,6 @@
 			[
 				"compr",
 				"src/Game/CompressionDemo.cpp"
-			],
-			[
-				"compressiondemo.h",
-				"src/Game/CompressionDemo.h"
-			],
-			[
-				"replaymanager.cpp",
-				"src/Game/ReplayManager.cpp"
-			],
-			[
-				"bsdsocket.cpp",
-				"src/Network/BSDSocket.cpp"
-			],
-			[
-				"steram.h",
-				"src/Protocol/Stream.h"
-			],
-			[
-				"vec3f.h",
-				"external/vectorial/vec3f.h"
-			],
-			[
-				"snaphot.h",
-				"src/Game/Snapshot.h"
-			],
-			[
-				"vec3f",
-				"external/vectorial/vec3f.h"
-			],
-			[
-				"sanpshot.h",
-				"src/Game/Snapshot.h"
-			],
-			[
-				"activation.h",
-				"src/Cubes/Activation.h"
-			],
-			[
-				"snaps",
-				"src/Game/Snapshot.h"
-			],
-			[
-				"sequencebuffer.h",
-				"src/Protocol/SequenceBuffer.h"
-			],
-			[
-				"slidingwindow.h",
-				"src/Protocol/SlidingWindow.h"
-			],
-			[
-				"slidnigwindow.h",
-				"src/Protocol/SlidingWindow.h"
 			]
 		],
 		"width": 0.0

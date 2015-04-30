@@ -2,41 +2,77 @@ DONE:
 
 TODO:    
 
-    Server needs a function to read and process packets.
+    Perhaps client needs to exchange synchronize packets with server in connect phase
 
-    server_read_packets
+    Client can't really start sending inputs to server until synchronization occurs,
+    because the client doesn't know what the proper tick should be.
 
-    Client needs a function to send packets.
+    Synchronization should probably last one second, but this should be configurable.
 
-    client_send_packet
+    Perhaps synchronization could be done in parallel with sending down the data block
+    for the initial snapshot state. This seems like a smart idea. There could certainly
+    be some payload/work being done rather than 
 
-    Client also needs to read packets:
+    It seems like reconnects are smart, because otherwise we have to implement all that
+    logic to tear down and recreate inside the protocol, when instead it could just be
+    a fresh connect.
 
-    client_read_packets
+    ------------------------------------------
+
+    Client needs access to current tick, either in its tick or through a pointer to world.
+
+    Client also needs a sliding window of inputs, struct { uint64_t tick, Input input }
+
+    For now start by copying across the tick from the world, and stashing the inputs
+    inside the client from the main loop.
+
+    It would be preferrable if the client didn't know about the world, but the world
+    could query stuff on the client to perform things (like slowing up or slowing down)
+
+    ------------------------------------------
+
+    Now design initial client synchronization to server tick
+
+    I want the client to start out in synchronzing mode (inside input packets)
+
+    What would this synchronization look like? I think some period of time where the client
+    samples packets from the server, and vice versa, and the client and server work out
+    where the client should be.
+
+    ------------------------------------------
+
+    After initial synchronization the client should make only small adjustments
+
+    However, in worst case, the client should be able to go back to synchronize state
+
+    This should probably co-incide with a return to, hey server please provide me with
+    the initial snapshot again (lots of time has passed) or something like this.
+
+    Maybe it is just a reconnect? Might be easier to implement.
+
+    ------------------------------------------
+
+    Implement code that delta encodes inputs sent to server.
+
+    Implement code to replay back to client with most recently received input tick
+
+    At this point should be able to print out inputs received by server and all
+    should get through reliably and in-order (unless more packets are lost than
+    max input).
 
     ----------------------------------------------
 
-    Would be nice to be able to connect by hostname. 
+    Need to design jitter buffer for inputs and client delivering inputs ahead of need.
 
-    If the address to connect to does not resolve to a valid address, try running it through DNS.
+    Should be a continual process. Server should be measuring input packet delivery and
+    telling client periodically to speed up or slow down (or snap to a particular time)
 
-    Probably also need to recover some DNS resolve stuff (blocking is OK initially...)
+    Should the snap be a state? eg. synchronizing? generally this would be very disruptive for VR
+    but it may be necessary. If there is a large hitch or large burst of packet loss, the client
+    may drift and just need to resynchronize.
 
-    Next need the ability to have different packet types, but don't bind up with the silly
-    packet queue processing from the previous setup, it's overkill. Instead process the packets
-    in-place from the memory buffer.
+    Therefore I think the clients needs to go into a synchronize state immediately upon first connect.
+
+    While synchronizing the simulation does not run. Client just says "Synchronizing..."
 
     ----------------------------------------------
-
-    Client should connect, get back response + token it should use for rest of communications.
-
-    Design connection protocol so client can use token to request a restart if at any point
-    it does not follow the server protocol, eg. server can just say, hey you should reconnect
-    to me, or client can initiate reconnect and it should always work.
-
-    Connection should have a period where the client sends data to the server, and the 
-    server replies with a block of data to the client.
-
-    While doing this the client should measure QoS to the server and synchronize time.
-
-    Hitching during loading are not allowed because they throw off the time synchronization.

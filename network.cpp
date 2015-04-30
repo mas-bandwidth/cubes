@@ -434,3 +434,70 @@ Socket::~Socket()
     #endif
     m_socket = 0;
 }
+
+bool Socket::SendPacket( const Address & address, const uint8_t * data, int bytes )
+{
+    assert( m_socket );
+    assert( address.IsValid() );
+    assert( bytes > 0 );
+
+    bool result = false;
+
+    if ( address.GetType() == ADDRESS_IPV6 )
+    {
+        sockaddr_in6 s_addr;
+        memset( &s_addr, 0, sizeof( s_addr ) );
+        s_addr.sin6_family = AF_INET6;
+        s_addr.sin6_port = htons( address.GetPort() );
+        memcpy( &s_addr.sin6_addr, address.GetAddress6(), sizeof( s_addr.sin6_addr ) );
+        const int sent_bytes = sendto( m_socket, (const char*)data, bytes, 0, (sockaddr*)&s_addr, sizeof(sockaddr_in6) );
+        result = sent_bytes == bytes;
+    }
+    else if ( address.GetType() == ADDRESS_IPV4 )
+    {
+        sockaddr_in s_addr;
+        memset( &s_addr, 0, sizeof( s_addr ) );
+        s_addr.sin_family = AF_INET;
+        s_addr.sin_addr.s_addr = address.GetAddress4();
+        s_addr.sin_port = htons( (unsigned short) address.GetPort() );
+        const int sent_bytes = sendto( m_socket, (const char*)data, bytes, 0, (sockaddr*)&s_addr, sizeof(sockaddr_in) );
+        result = sent_bytes == bytes;
+    }
+
+    if ( !result )
+        fprintf( stderr, "sendto failed: %s\n", strerror( errno ) );
+
+    return result;
+}
+
+int Socket::ReceivePacket( Address & sender, uint8_t * buffer, int buffer_size )
+{
+    assert( m_socket );
+    assert( buffer );
+    assert( buffer_size > 0 );
+
+    #if _WIN32 || _WIN64
+    typedef int socklen_t;
+    #endif
+    
+    sockaddr_storage from;
+    socklen_t fromLength = sizeof( from );
+
+    int result = recvfrom( m_socket, (char*)buffer, buffer_size, 0, (sockaddr*)&from, &fromLength );
+
+    if ( result <= 0 )
+    {
+        if ( errno == EAGAIN )
+            return 0;
+
+        printf( "recvfrom failed: %s\n", strerror( errno ) );
+
+        return 0;
+    }
+
+    sender = Address( from );
+
+    assert( result >= 0 );
+
+    return result;
+}
