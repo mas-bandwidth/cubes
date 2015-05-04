@@ -2,77 +2,31 @@ DONE:
 
 TODO:    
 
-    Perhaps client needs to exchange synchronize packets with server in connect phase
+    -----------------------------------------
 
-    Client can't really start sending inputs to server until synchronization occurs,
-    because the client doesn't know what the proper tick should be.
+    Extend client to adjust client tick at point that synchronization ends
+    to server tick plus offset, and start sending inputs to server.
 
-    Synchronization should probably last one second, but this should be configurable.
+    Implement sliding window of inputs in client.
 
-    Perhaps synchronization could be done in parallel with sending down the data block
-    for the initial snapshot state. This seems like a smart idea. There could certainly
-    be some payload/work being done rather than 
+    Start encoding inputs up to maximum input
 
-    It seems like reconnects are smart, because otherwise we have to implement all that
-    logic to tear down and recreate inside the protocol, when instead it could just be
-    a fresh connect.
+    Verify that server receives inputs (print them out with tick)
 
-    ------------------------------------------
+    -----------------------------------------
 
-    Client needs access to current tick, either in its tick or through a pointer to world.
+    Bring across interpolation delay.
 
-    Client also needs a sliding window of inputs, struct { uint64_t tick, Input input }
+    Implement snapshot packets sent to client.
 
-    For now start by copying across the tick from the world, and stashing the inputs
-    inside the client from the main loop.
+    Bring across delta encoding stuff from snapshots and interpolation demo.
 
-    It would be preferrable if the client didn't know about the world, but the world
-    could query stuff on the client to perform things (like slowing up or slowing down)
+    -----------------------------------------
 
-    ------------------------------------------
+    At this point should have pure client/server implementation with RTT baked in.
 
-    Now design initial client synchronization to server tick
+    Try running this over the internet to the real server instance running on linux.
 
-    I want the client to start out in synchronzing mode (inside input packets)
+    Are small adjustments required to get it to work? Probably... but make sure.
 
-    What would this synchronization look like? I think some period of time where the client
-    samples packets from the server, and vice versa, and the client and server work out
-    where the client should be.
-
-    ------------------------------------------
-
-    After initial synchronization the client should make only small adjustments
-
-    However, in worst case, the client should be able to go back to synchronize state
-
-    This should probably co-incide with a return to, hey server please provide me with
-    the initial snapshot again (lots of time has passed) or something like this.
-
-    Maybe it is just a reconnect? Might be easier to implement.
-
-    ------------------------------------------
-
-    Implement code that delta encodes inputs sent to server.
-
-    Implement code to replay back to client with most recently received input tick
-
-    At this point should be able to print out inputs received by server and all
-    should get through reliably and in-order (unless more packets are lost than
-    max input).
-
-    ----------------------------------------------
-
-    Need to design jitter buffer for inputs and client delivering inputs ahead of need.
-
-    Should be a continual process. Server should be measuring input packet delivery and
-    telling client periodically to speed up or slow down (or snap to a particular time)
-
-    Should the snap be a state? eg. synchronizing? generally this would be very disruptive for VR
-    but it may be necessary. If there is a large hitch or large burst of packet loss, the client
-    may drift and just need to resynchronize.
-
-    Therefore I think the clients needs to go into a synchronize state immediately upon first connect.
-
-    While synchronizing the simulation does not run. Client just says "Synchronizing..."
-
-    ----------------------------------------------
+    -----------------------------------------

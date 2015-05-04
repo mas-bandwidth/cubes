@@ -1,4 +1,78 @@
 
+Monday Morning, May 4th, 2015
+-----------------------------
+
+    Implement code that measures difference between client and server tick
+    during sync phase. initially just print it out.
+
+    Extend client and server to both track ticks.
+
+    Server now counts a number of samples and then ends sync stage.
+
+    Client starts off not initially synchronizing (because cannot synchronize
+    until the server tells the client the tick...), and client synchronize is
+    kicked off by the server saying, OK we are synchronizing now.
+
+    Added sync sequence so the server can discard old input sync packets.
+
+    Client needs to get sync sequence from server.
+
+    Server should ignore sync input packets from client without matching sync sequence.
+
+    Server needs to communicate sync offset back to client.
+
+    This probably means that server stays in sync until the client reflects back
+    the expected sync offset once the maximum # of sync samples have been gathered.
+
+    Extend the server to print out: "client synchronize offset: %d"
+
+    Extend client to print out offset when detects synchronized.
+
+
+Sunday, May 3rd, 2015
+---------------------
+
+    Client needs access to current tick, either in its tick or through a pointer to world.
+
+    Server needs access to current tick as well.
+
+    For now I think it is good to copy it across. I don't want client/server to manipulate
+    the world directly, except through functions that accept the client/server and world 
+    to bridge.
+
+    Added client_tick and server_tick to client structure.
+
+    Client tick is the last simulated tick from the client.
+
+    Server tick is the most recently recieved tick from the server.
+
+    I can use this to offset the client ticks by a fixed amount relative to the server.
+
+    Once synchronization is complete the offset can be locked in and small adjustments made relative,
+    eg. scale time so that you speed up or slow down by x ticks over y seconds.
+
+    Bottom line the adjustments need to be small and in reality if late packets.
+
+    Also, the adjustment should not be exact, eg. you have RTT this and jitter that.
+
+    The adjustments should be driven by a binary thing only, which is -- end result: did all
+    inputs get delivered on time? We don't even really need to calculate the average of input
+    delay, we just need to find the first point where inputs are delivered.
+
+    Bonus points this can be moved closer to the point where it starts to break, but then
+    we should back off and deliver inputs at that breaking point plus a safety amount.
+
+    Some safety amount is required in case of delay or random internet BS.
+
+    The goal should be to deliver all inputs with an amount of safety.
+
+    Perhaps just parameterize this safety in there and then aim for it directly. Binary search.
+
+    While doing all this the connection should be sending bandwidth both directions that matches
+    the expected worst case bandwidth of the connection up/down for this client, so there are no
+    bufferbloat issues where latency goes higher under load.
+
+
 Wednesday, April 29th, 2015
 ---------------------------
 

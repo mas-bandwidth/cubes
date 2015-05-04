@@ -53,33 +53,60 @@ struct ConnectionDeniedPacket : public Packet
 
 struct InputPacket : public Packet
 {
+    bool synchronizing;
+    uint16_t sync_offset;
+    uint16_t sync_sequence;
     uint64_t tick;
     int num_inputs;
     Input input[MaxInputsPerPacket];
 
     SERIALIZE_OBJECT( stream )
     {
-        serialize_uint64( stream, tick );
-        serialize_int( stream, num_inputs, 0, MaxInputsPerPacket );
-        for ( int i = 0; i < num_inputs; ++i )
+        serialize_bool( stream, synchronizing );
+        if ( synchronizing )
         {
-            serialize_bool( stream, input[i].left );
-            serialize_bool( stream, input[i].right );
-            serialize_bool( stream, input[i].up );
-            serialize_bool( stream, input[i].down );
-            serialize_bool( stream, input[i].push );
-            serialize_bool( stream, input[i].pull );
+            serialize_uint16( stream, sync_offset );
+            serialize_uint16( stream, sync_sequence );
+            serialize_uint64( stream, tick );
+        }
+        else
+        {
+            serialize_uint64( stream, tick );
+            serialize_int( stream, num_inputs, 0, MaxInputsPerPacket );
+            for ( int i = 0; i < num_inputs; ++i )
+            {
+                serialize_bool( stream, input[i].left );
+                serialize_bool( stream, input[i].right );
+                serialize_bool( stream, input[i].up );
+                serialize_bool( stream, input[i].down );
+                serialize_bool( stream, input[i].push );
+                serialize_bool( stream, input[i].pull );
+            }
         }
     }
 };
 
 struct SnapshotPacket : public Packet
 {
+    bool synchronizing;
+    uint16_t sync_offset;
+    uint16_t sync_sequence;
     uint64_t tick;
 
     SERIALIZE_OBJECT( stream )
     {
-        serialize_uint64( stream, tick );
+        serialize_bool( stream, synchronizing );
+        if ( synchronizing )
+        {
+            serialize_uint64( stream, tick );
+            serialize_uint16( stream, sync_offset );
+            serialize_uint16( stream, sync_sequence );
+        }
+        else
+        {
+            serialize_uint64( stream, tick );
+            // todo: serialize rest of snapshot
+        }
     }
 };
 

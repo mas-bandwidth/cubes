@@ -1,5 +1,28 @@
 WOULD BE NICE
 
+    -----------------------------------------
+
+    Implement small adjustments, eg. speed up n frames over x seconds, slow down etc.
+
+    This should be only small adjustments.
+
+    If detect that desync has occured outside of threshold for small adjustments,
+    go back to synchronize state.
+
+    Make sure that when going back to snychronize the sync offset is cleared to zero.
+
+    -----------------------------------------
+
+    Implement interpolation between ticks for client render, eg. fix your timestep.
+
+    -----------------------------------------
+
+    Might be a good idea to create server guid and stick it in connecting packets,
+    as well as sync packets, this way the client cannot connect or get packets sent
+    to it for long without knowing the challenge response.
+
+    -----------------------------------------
+
     Get the alpha blending and color transition blending working again.
 
     To do this we'll need the concept of per-entity view data, eg. indexed by entity id.
@@ -17,3 +40,5 @@ WOULD BE NICE
     Ideally this could be done seamlessly inside client state machine
 
     Ideally the DNS resolution would be non-blocking
+
+    -----------------------------------------

@@ -1,0 +1,53 @@
+PLANNING
+
+    ------------------------------------------
+
+    I see a binary search where the server tells the client to repeatedly adjust forward/back
+    like newton rhapson iteration, it starts with a full RTT reply and works out if any packets
+    are late.
+
+    Output from this is that it probably knows loosely the RTT of the client, but not the
+    one-way trip time from client->server which is what really counts.
+
+    Server then binary searches to find an appropriate delivery that gets packets on time
+    from client -> server with a moderate amount of safety.
+
+    After this baseline has been established the server just needs to correct for minor drift.
+
+    If a substantial desync in time is detected, eg. inputs are too early or too late,
+    then the client goes back into synchronization.
+
+    Controlling all of this is a sequence number that increases from server -> client
+    with each synchronization event.
+
+    This way it can be done without reliability system.
+
+    ------------------------------------------
+
+    Synchronize should look like, one second where server tells client its current time
+
+    Client replies back to server with most recent time received.
+
+    Server looks at this and on average says, OK, you need to start at this tick
+
+    Trick is that the rest of the world is in the past, but the client is simulating
+    ahead his objects (and his input) up this amount ahead.
+
+    I am too tired to work this out now.
+
+    ------------------------------------------
+
+    Perhaps client needs to exchange synchronize packets with server in connect phase
+
+    Client can't really start sending inputs to server until synchronization occurs,
+    because the client doesn't know what the proper tick should be.
+
+    Synchronization should probably last one second, but this should be configurable.
+
+    Perhaps synchronization could be done in parallel with sending down the data block
+    for the initial snapshot state. This seems like a smart idea. There could certainly
+    be some payload/work being done rather than 
+
+    It seems like reconnects are smart, because otherwise we have to implement all that
+    logic to tear down and recreate inside the protocol, when instead it could just be
+    a fresh connect.

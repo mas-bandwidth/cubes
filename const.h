@@ -3,6 +3,8 @@
 #ifndef CONST_H
 #define CONST_H
 
+static const int MaxSyncSamples = 64;
+
 static const int ServerPort = 20000;
 static const int MaxInputsPerPacket = 63;
 static const float Timeout = 5.0f;

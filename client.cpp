@@ -34,12 +34,17 @@ struct Client
     uint64_t guid;
     ClientState state;
     Address server_address;
+    
     double current_real_time;
     double time_last_packet_received;
+    uint64_t client_tick;
+    uint64_t server_tick;
 
-    // todo: need to put tick in here (from world)
+    bool synchronizing;
+    uint16_t sync_sequence;
+    uint16_t sync_offset;
 
-    // todo: need sliding window of inputs here indexed by tick above
+    // todo: need sliding window of inputs indexed by tick above
 };
 
 void client_init( Client & client )
@@ -47,7 +52,13 @@ void client_init( Client & client )
     client.socket = new Socket( 0 );
     client.guid = rand();
     client.state = CLIENT_DISCONNECTED;
+    client.current_real_time = 0.0;
     client.time_last_packet_received = 0.0;
+    client.client_tick = 0;
+    client.server_tick = 0;
+    client.synchronizing = false;
+    client.sync_sequence = 0;
+    client.sync_offset = 0;
 }
 
 void client_connect( Client & client, const Address & address, double current_real_time )
@@ -112,8 +123,19 @@ void client_send_packets( Client & client )
         {
             InputPacket packet;
             packet.type = PACKET_TYPE_INPUT;
-            packet.tick = 0;                        // todo: we need access to current tick and inputs for this client
-            packet.num_inputs = 1;
+            packet.synchronizing = client.synchronizing;
+            if ( client.synchronizing )
+            {
+                packet.sync_offset = client.sync_offset;
+                packet.sync_sequence = client.sync_sequence;
+                packet.tick = client.server_tick;
+            }
+            else
+            {
+                packet.tick = client.client_tick;
+                packet.num_inputs = 1;
+                // todo: we need access to sliding window of inputs for this client
+            }
             client_send_packet( client, packet );
         }
         break;
@@ -155,8 +177,27 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
 
         case PACKET_TYPE_SNAPSHOT:
         {
-            //SnapshotPacket & input = (SnapshotPacket&) base_packet;
-            // todo: process snapshot packet
+            SnapshotPacket & packet = (SnapshotPacket&) base_packet;
+            if ( packet.tick > client.server_tick )
+            {
+                if ( !client.synchronizing && packet.synchronizing )
+                {
+                    printf( "synchronizing\n" );
+                }
+                if ( client.synchronizing && !packet.synchronizing )
+                {
+                    printf( "synchronized [%d]\n", client.sync_offset );
+                }
+
+                client.server_tick = packet.tick;
+                client.synchronizing = packet.synchronizing;
+                client.sync_offset = packet.sync_offset;
+                client.sync_sequence = packet.sync_sequence;
+            }
+            else
+            {
+                // old packet -- ignore
+            }
             return true;
         }
         break;
@@ -380,7 +421,7 @@ int client_main( int argc, char ** argv )
 
 #else // #if !HEADLESS
 
-        platform_sleep( 1.0 );
+        platform_sleep( 1.0 / 60.0 );
 
         double frame_start_time = platform_time();
 

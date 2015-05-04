@@ -16,9 +16,19 @@ enum ClientState
     CLIENT_CONNECTED
 };
 
+struct SyncData
+{
+    bool synchronizing = false;
+    uint16_t sequence = 0;
+    int num_samples = 0;
+    int offset = 0;
+};
+
 struct Server
 {
     Socket * socket = nullptr;
+
+    uint64_t tick = 0;
 
     uint64_t client_guid[MaxClients];
 
@@ -29,6 +39,8 @@ struct Server
     double current_real_time;
 
     double client_time_last_packet_received[MaxClients];
+
+    SyncData client_sync_data[MaxClients];
 };
 
 void server_init( Server & server )
@@ -47,8 +59,9 @@ void server_init( Server & server )
     printf( "server listening on port %d\n", server.socket->GetPort() );
 }
 
-void server_update( Server & server, double current_real_time )
+void server_update( Server & server, uint64_t tick, double current_real_time )
 {
+    server.tick = tick;
     server.current_real_time = current_real_time;
 
     for ( int i = 0; i < MaxClients; ++i )
@@ -58,29 +71,13 @@ void server_update( Server & server, double current_real_time )
             if ( current_real_time > server.client_time_last_packet_received[i] + Timeout )
             {
                 char buffer[256];
-                printf( "client %d timed out - %s\n", i, server.client_address[i].ToString( buffer, sizeof( buffer ) ) );
+                printf( "client %d timed out %s\n", i, server.client_address[i].ToString( buffer, sizeof( buffer ) ) );
                 server.client_state[i] = CLIENT_DISCONNECTED;
                 server.client_address[i] = Address();
                 server.client_guid[i] = 0;
                 server.client_time_last_packet_received[i] = 0.0;
+                server.client_sync_data[i] = SyncData();
             }
-        }
-
-        switch ( server.client_state[i] )
-        {
-            /*
-            case CLIENT_SENDING_CONNECTION_RESPONSE:
-            {
-                ConnectionResponsePacket packet;
-                packet.type = PACKET_TYPE_CONNECTION_REQUEST;
-                packet.client_guid = client.guid;
-                client_send_packet( client, packet );
-            }
-            break;
-            */
-
-            default:
-                break;
         }
     }
 }
@@ -140,7 +137,10 @@ void server_send_packets( Server & server )
         {
             SnapshotPacket packet;
             packet.type = PACKET_TYPE_SNAPSHOT;
-            packet.tick = 0;                            // todo: we need access to the world tick
+            packet.tick = server.tick;
+            packet.synchronizing = server.client_sync_data[i].synchronizing;
+            packet.sync_offset = server.client_sync_data[i].offset;
+            packet.sync_sequence = server.client_sync_data[i].sequence;
             server_send_packet( server, server.client_address[i], packet );
         }
     }
@@ -169,13 +169,15 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                 if ( client_slot != -1 )
                 {
                     char buffer[256];
-                    printf( "client %d connecting - %s\n", client_slot, from.ToString( buffer, sizeof( buffer ) ) );
+                    printf( "client %d connecting %s\n", client_slot, from.ToString( buffer, sizeof( buffer ) ) );
 
                     // connect client
                     server.client_state[client_slot] = CLIENT_CONNECTING;
                     server.client_guid[client_slot] = packet.client_guid;
                     server.client_address[client_slot] = from;
                     server.client_time_last_packet_received[client_slot] = server.current_real_time;
+                    server.client_sync_data[client_slot] = SyncData();
+                    server.client_sync_data[client_slot].synchronizing = true;
 
                     // send connection accepted resonse
                     ConnectionAcceptedPacket response;
@@ -211,19 +213,48 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
 
         case PACKET_TYPE_INPUT:
         {
-            //InputPacket & input = (InputPacket&) base_packet;
+            InputPacket & packet = (InputPacket&) base_packet;
             int client_slot = server_find_client_slot( server, from );
             if ( client_slot != -1 )
             {
                 if ( server.client_state[client_slot] == CLIENT_CONNECTING )
                 {
                     char buffer[256];
-                    printf( "client %d connected - %s\n", client_slot, from.ToString( buffer, sizeof( buffer ) ) );
+                    printf( "client %d connected %s\n", client_slot, from.ToString( buffer, sizeof( buffer ) ) );
                     server.client_state[client_slot] = CLIENT_CONNECTED;
                 }
 
-                // todo: process input packet
+                if ( packet.synchronizing && server.client_sync_data[client_slot].synchronizing &&
+                     packet.sync_sequence == server.client_sync_data[client_slot].sequence )
+                {
+                    // todo: update this so we know the last tick of the client
+                    // this way we can calculate lateness based on oldest input the client
+                    // sends to us, not the most recent one. this more accurately represents
+                    // input delivery requirements post-synchronize so it is much more accurate.
+
+                    const int offset = (int) ( server.tick - packet.tick );
+
+                    printf( "%d - %d = %d\n", (int) server.tick, (int) packet.tick, offset );
+                    
+                    server.client_sync_data[client_slot].num_samples++;
+                    server.client_sync_data[client_slot].offset = max( offset, server.client_sync_data[client_slot].offset );
+                    
+                    if ( server.client_sync_data[client_slot].num_samples > MaxSyncSamples && 
+                         server.client_sync_data[client_slot].offset == packet.sync_offset )
+                    {
+                        printf( "client %d synchronized [%d]\n", client_slot, server.client_sync_data[client_slot].offset );
+                        server.client_sync_data[client_slot].synchronizing = false;
+                        server.client_sync_data[client_slot].sequence++;
+                    }
+                }
+
+                if ( !packet.synchronizing && !server.client_sync_data[client_slot].synchronizing )
+                {
+                    // todo: process client input
+                }
+
                 server.client_time_last_packet_received[client_slot] = server.current_real_time;
+
                 return true;
             }
         }
@@ -313,7 +344,7 @@ int server_main( int argc, char ** argv )
 
         const double jitter = real_time - frame_time;
 
-        server_update( server, real_time );
+        server_update( server, world.tick, real_time );
 
         server_receive_packets( server );
 

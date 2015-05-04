@@ -8,4 +8,6 @@ Implement proper interpolation buffer and aim ahead for frame n jitter buffer
 
 Work out how client speeds up vs. slows down time. Tricky without artifacts or adding latency.
 
+Get this working initially with non-predicted client objects, eg. with RTT latency and interpolation.
+
 Adjust this architecture such that client side prediction is implemented
