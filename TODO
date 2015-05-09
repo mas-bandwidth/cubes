@@ -1,8 +1,15 @@
 DONE:
 
-TODO:    
-
     Try this code running on the linux server. Going to need to upgrade the instance type to large.
+
+    Fixed a bunch of annoying errors.
+
+    Server is still dropping frames occasionally even on a large instance. This is bad.
+
+    This probably indicates that small adjustments from the client will be required
+    just for the client to keep in sync as the server randomly drops frames. Lame.
+
+TODO:    
 
     What is the result? Does it still deliver inputs reliably ahead after initial sync?
 

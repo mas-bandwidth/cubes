@@ -341,7 +341,13 @@ int client_main( int argc, char ** argv )
 
     signal( SIGINT, interrupt_handler );
 
-    client_connect( client, Address( "::1", ServerPort ), 0.0 );
+    //auto server_address = Address( "::1", ServerPort );
+
+    //auto server_address = Address( "54.200.68.81", ServerPort );
+
+    auto server_address = Address( "240.19.82.126", ServerPort );
+
+    client_connect( client, server_address, 0.0 );
 
     const double start_time = platform_time();
 

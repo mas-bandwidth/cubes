@@ -331,7 +331,7 @@ bool Address::operator !=( const Address & other ) const
     return !( *this == other );
 }
 
-Socket::Socket( uint16_t port, bool ipv6 )
+Socket::Socket( uint16_t port, bool ipv6_only )
 {
     assert( network_initialized );
 
@@ -339,7 +339,7 @@ Socket::Socket( uint16_t port, bool ipv6 )
 
     // create socket
 
-    m_socket = socket( ipv6 ? AF_INET6 : AF_INET, SOCK_DGRAM, IPPROTO_UDP );
+    m_socket = socket( ipv6_only ? AF_INET6 : AF_INET, SOCK_DGRAM, IPPROTO_UDP );
 
     if ( m_socket <= 0 )
     {
@@ -350,7 +350,7 @@ Socket::Socket( uint16_t port, bool ipv6 )
 
     // force IPv6 only if necessary
 
-    if ( ipv6 )
+    if ( ipv6_only )
     {
         int yes = 1;
         if ( setsockopt( m_socket, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&yes, sizeof(yes) ) != 0 )
@@ -363,7 +363,7 @@ Socket::Socket( uint16_t port, bool ipv6 )
 
     // bind to port
 
-    if ( ipv6 )
+    if ( ipv6_only )
     {
         sockaddr_in6 sock_address;
         memset( &sock_address, 0, sizeof( sockaddr_in6 ) );

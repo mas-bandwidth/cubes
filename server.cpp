@@ -312,6 +312,8 @@ void server_receive_packets( Server & server )
         int bytes_read = server.socket->ReceivePacket( from, buffer, sizeof( buffer ) );
         if ( bytes_read == 0 )
             break;
+        char address_buffer[256];
+        printf( "received packet from %s\n", from.ToString( address_buffer, sizeof( address_buffer ) ) );
         read_packet( from, buffer, bytes_read, &server );
     }
 }

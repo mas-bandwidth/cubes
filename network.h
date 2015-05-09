@@ -97,7 +97,7 @@ class Socket
 {
 public:
 
-    Socket( uint16_t port, bool ipv6 = true );
+    Socket( uint16_t port, bool ipv6_only = false );
 
     ~Socket();
 
