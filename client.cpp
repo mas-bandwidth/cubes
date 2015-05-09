@@ -501,8 +501,6 @@ int client_main( int argc, char ** argv )
 
         platform_sleep( time_to_sleep );
 
-        const double real_time = platform_time();
-
         const double frame_time = next_frame_time;
 
         Input input;

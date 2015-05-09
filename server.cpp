@@ -22,6 +22,7 @@ struct SyncData
     uint16_t sequence = 0;
     int num_samples = 0;
     int offset = 0;
+    uint64_t latest_input_tick = 0;
 };
 
 struct Server
@@ -227,14 +228,16 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                 if ( packet.synchronizing && server.client_sync_data[client_slot].synchronizing &&
                      packet.sync_sequence == server.client_sync_data[client_slot].sequence )
                 {
-                    // todo: update this so we know the last tick of the client
-                    // this way we can calculate lateness based on oldest input the client
-                    // sends to us, not the most recent one. this more accurately represents
-                    // input delivery requirements post-synchronize so it is much more accurate.
+                    uint64_t oldest_input_tick = packet.tick;
+                    
+                    if ( server.client_sync_data[client_slot].num_samples > 0 )
+                        oldest_input_tick = server.client_sync_data[client_slot].latest_input_tick + 1;
 
-                    const int offset = (int) ( server.tick + TicksPerServerFrame - packet.tick );
+                    server.client_sync_data[client_slot].latest_input_tick = packet.tick;
 
-//                    printf( "%d - %d = %d\n", (int) server.tick, (int) packet.tick, offset );
+                    const int offset = (int) ( server.tick + TicksPerServerFrame - oldest_input_tick );
+
+//                    printf( "%d - %d (%d) = %d\n", (int) server.tick, (int) oldest_input_tick, (int) packet.tick, offset );
                     
                     server.client_sync_data[client_slot].num_samples++;
                     server.client_sync_data[client_slot].offset = max( offset, server.client_sync_data[client_slot].offset );

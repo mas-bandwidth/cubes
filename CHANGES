@@ -21,6 +21,13 @@ Saturday Morning, May 9th, 2015
     ahead of current tick, because it is about to simulate those! Therefore,
     client must be a bit further ahead.
 
+    Extend synchronization on server to determine last acked input,
+    when calculating offset, do it relative to oldest input received
+    (eg. last recieved input + 1) rather than the input tick in the
+    packet.
+
+    To implement this server needs to track last tick received from client.
+
 
 Monday Morning, May 4th, 2015
 -----------------------------
