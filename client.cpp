@@ -41,6 +41,7 @@ struct Client
     uint64_t server_tick;
 
     bool synchronizing;
+    bool ready_to_apply_sync;
     uint16_t sync_sequence;
     uint16_t sync_offset;
 
@@ -57,6 +58,7 @@ void client_init( Client & client )
     client.client_tick = 0;
     client.server_tick = 0;
     client.synchronizing = false;
+    client.ready_to_apply_sync = false;
     client.sync_sequence = 0;
     client.sync_offset = 0;
 }
@@ -183,20 +185,22 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                 if ( !client.synchronizing && packet.synchronizing )
                 {
                     printf( "synchronizing\n" );
+                    client.synchronizing = true;
                 }
-                if ( client.synchronizing && !packet.synchronizing )
+                
+                if ( client.synchronizing )
                 {
-                    printf( "synchronized [%d]\n", client.sync_offset );
+                    if ( !packet.synchronizing && !client.ready_to_apply_sync )
+                    {
+                        client.ready_to_apply_sync = true;
+                    }
+                    else
+                    {
+                        client.server_tick = packet.tick;
+                        client.sync_offset = packet.sync_offset;
+                        client.sync_sequence = packet.sync_sequence;
+                    }
                 }
-
-                client.server_tick = packet.tick;
-                client.synchronizing = packet.synchronizing;
-                client.sync_offset = packet.sync_offset;
-                client.sync_sequence = packet.sync_sequence;
-            }
-            else
-            {
-                // old packet -- ignore
             }
             return true;
         }
@@ -222,6 +226,18 @@ void client_receive_packets( Client & client )
 
         if ( read_packet( from, buffer, bytes_read, &client ) )
             client.time_last_packet_received = client.current_real_time;
+    }
+}
+
+void client_apply_time_synchronization( Client & client, World & world )
+{
+    if ( client.synchronizing && client.ready_to_apply_sync )
+    {
+        printf( "synchronized [%d]\n", (int) client.sync_offset );
+        world.tick = client.server_tick + client.sync_offset + SyncSafety;
+        client.client_tick = world.tick;
+        client.synchronizing = false;
+        client.ready_to_apply_sync = false;
     }
 }
 
@@ -256,6 +272,11 @@ void client_frame( World & world, const Input & input, double real_time, double 
         client_tick( world, input );
 
     world.frame++;
+}
+
+void client_post_frame( Client & client, World & world )
+{
+    client.client_tick = world.tick;
 }
 
 #if !HEADLESS
@@ -321,8 +342,6 @@ Input client_sample_input( GLFWwindow * window )
     return input;
 }
 
-#endif // #if !HEADLESS
-
 int client_main( int argc, char ** argv )
 {
     InitializeNetwork();
@@ -334,8 +353,6 @@ int client_main( int argc, char ** argv )
     World world;
     world_init( world );
     world_setup_cubes( world );
-
-#if !HEADLESS
 
     glfwInit();
 
@@ -401,15 +418,10 @@ int client_main( int argc, char ** argv )
 
     double previous_frame_time = platform_time();
 
-#else // #if !HEADLESS
-
-    client_connect( client, Address( "::1", ServerPort ), 0.0 );
-
-#endif // #if !HEADLESS
-
     while ( true )
     {
-#if !HEADLESS
+        if ( client.state == CLIENT_TIMED_OUT )
+            break;
 
         glfwSwapBuffers( window );
 
@@ -419,25 +431,17 @@ int client_main( int argc, char ** argv )
 
         Input input = client_sample_input( window );
 
-#else // #if !HEADLESS
-
-        platform_sleep( 1.0 / 60.0 );
-
-        double frame_start_time = platform_time();
-
-        Input input;
-
-#endif // #if !HEADLESS
-
         client_update( client, frame_start_time );
 
         client_receive_packets( client );
+
+        client_apply_time_synchronization( client, world );
 
         client_send_packets( client );
 
         client_frame( world, input, frame_start_time, world.frame * ClientFrameDeltaTime );
 
-#if !HEADLESS
+        client_post_frame( client, world );
 
         client_render( world );
 
@@ -445,22 +449,109 @@ int client_main( int argc, char ** argv )
 
         if ( glfwWindowShouldClose( window ) )
             break;
-
-#endif // #if !HEADLESS
     }
 
     world_free( world );
 
     client_free( client );
 
-#if !HEADLESS
     glfwTerminate();
-#endif // #if !HEADLESS
 
     ShutdownNetwork();
 
     return 0;
 }
+
+#else // #if !HEADLESS
+
+static volatile int quit = 0;
+
+void interrupt_handler( int dummy )
+{
+    quit = 1;
+}
+
+int client_main( int argc, char ** argv )
+{
+    InitializeNetwork();
+
+    Client client;
+
+    client_init( client );
+
+    World world;
+    world_init( world );
+    world_setup_cubes( world );
+
+    signal( SIGINT, interrupt_handler );
+
+    client_connect( client, Address( "::1", ServerPort ), 0.0 );
+
+    const double start_time = platform_time();
+
+    double previous_frame_time = start_time;
+    double next_frame_time = previous_frame_time + ClientFrameDeltaTime;
+
+    while ( !quit )
+    {
+        if ( client.state == CLIENT_TIMED_OUT )
+            break;
+
+        const double time_to_sleep = max( 0.0, next_frame_time - platform_time() - AverageSleepJitter );
+
+        platform_sleep( time_to_sleep );
+
+        const double real_time = platform_time();
+
+        const double frame_time = next_frame_time;
+
+        Input input;
+
+        client_update( client, frame_time );
+
+        client_receive_packets( client );
+
+        client_apply_time_synchronization( client, world );
+
+        client_send_packets( client );
+
+        client_frame( world, input, frame_time, world.frame * ClientFrameDeltaTime );
+
+        client_post_frame( client, world );
+
+        const double end_of_frame_time = platform_time();
+
+        int num_frames_advanced = 0;
+        while ( next_frame_time < end_of_frame_time + ClientFrameSafety * ClientFrameDeltaTime )
+        {
+            next_frame_time += ClientFrameDeltaTime;
+            num_frames_advanced++;
+        }
+
+        const int num_dropped_frames = max( 0, num_frames_advanced - 1 );
+
+        if ( num_dropped_frames > 0 && client.state == CLIENT_CONNECTED && !client.synchronizing )
+        {
+            printf( "dropped frame %d (%d)\n", (int) world.frame, num_dropped_frames );
+        }
+
+        previous_frame_time = next_frame_time - ClientFrameDeltaTime;
+
+        world.frame++;
+    }
+
+    printf( "\n" );
+
+    world_free( world );
+
+    client_free( client );
+
+    ShutdownNetwork();
+
+    return 0;
+}
+
+#endif // #if !HEADLESS
 
 int main( int argc, char ** argv )
 {

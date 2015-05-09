@@ -1,4 +1,27 @@
 
+Saturday Morning, May 9th, 2015
+-------------------------------
+
+    Extend client to adjust client tick at point that synchronization ends
+    to server tick plus offset, and start sending inputs to server.
+
+    If server receives client input late, print out a log
+
+    Client is delivering lots of inputs late. Sleep( 1 / 60 ) is not good enough.
+
+    Clean up headless vs. non-headless client.
+
+    Add break signal to headless client.
+
+    Extend headless client so that it has proper frame timing like the server.
+
+    The client delevering late inputs has been solved.
+
+    Extend server so that it is aware that the client needs to deliver n inputs
+    ahead of current tick, because it is about to simulate those! Therefore,
+    client must be a bit further ahead.
+
+
 Monday Morning, May 4th, 2015
 -----------------------------
 

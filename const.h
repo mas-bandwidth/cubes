@@ -4,6 +4,7 @@
 #define CONST_H
 
 static const int MaxSyncSamples = 64;
+static const int SyncSafety = 8;
 
 static const int ServerPort = 20000;
 static const int MaxInputsPerPacket = 63;
@@ -22,6 +23,7 @@ static const double ServerFrameDeltaTime = 1.0 / ServerFramesPerSecond;
 static const double ClientFrameDeltaTime = 1.0 / ClientFramesPerSecond;
 
 static const double ServerFrameSafety = 0.5;
+static const double ClientFrameSafety = 0.5;
 
 static const double AverageSleepJitter = 2.25 * 0.001;
 

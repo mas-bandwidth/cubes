@@ -232,9 +232,9 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                     // sends to us, not the most recent one. this more accurately represents
                     // input delivery requirements post-synchronize so it is much more accurate.
 
-                    const int offset = (int) ( server.tick - packet.tick );
+                    const int offset = (int) ( server.tick + TicksPerServerFrame - packet.tick );
 
-                    printf( "%d - %d = %d\n", (int) server.tick, (int) packet.tick, offset );
+//                    printf( "%d - %d = %d\n", (int) server.tick, (int) packet.tick, offset );
                     
                     server.client_sync_data[client_slot].num_samples++;
                     server.client_sync_data[client_slot].offset = max( offset, server.client_sync_data[client_slot].offset );
@@ -251,6 +251,11 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                 if ( !packet.synchronizing && !server.client_sync_data[client_slot].synchronizing )
                 {
                     // todo: process client input
+
+                    if ( packet.tick < server.tick )
+                    {
+                        printf( "client %d delivered late input: %d (%d)\n", client_slot, (int) packet.tick, (int) server.tick );
+                    }
                 }
 
                 server.client_time_last_packet_received[client_slot] = server.current_real_time;

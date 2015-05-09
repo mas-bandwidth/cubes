@@ -2,16 +2,25 @@ DONE:
 
 TODO:    
 
-    -----------------------------------------
+    Extend synchronization on server to determine last acked input,
+    when calculating offset, do it relative to oldest input received
+    (eg. last recieved input + 1) rather than the input tick in the
+    packet.
 
-    Extend client to adjust client tick at point that synchronization ends
-    to server tick plus offset, and start sending inputs to server.
+    To implement this server needs to track last tick received from client.
+
+    -----------------------------------------
 
     Implement sliding window of inputs in client.
 
     Start encoding inputs up to maximum input
 
-    Verify that server receives inputs (print them out with tick)
+    On the server now deliver detect late inputs. 
+
+    If an input is not there from a client when the server needs to simulate that tick,
+    print out a warning and bump up a counter.
+
+    If the client delivers too many late inputs in one second return to synchronizing state.
 
     -----------------------------------------
 
@@ -27,6 +36,8 @@ TODO:
 
     Try running this over the internet to the real server instance running on linux.
 
-    Are small adjustments required to get it to work? Probably... but make sure.
+    Are small adjustments required to get it to work? 
+
+    Probably... but make sure.
 
     -----------------------------------------
