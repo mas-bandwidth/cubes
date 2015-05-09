@@ -3,8 +3,8 @@
 #ifndef CONST_H
 #define CONST_H
 
-static const int MaxSyncSamples = 64;
-static const int SyncSafety = 8;
+static const int MaxSyncSamples = 128;
+static const int SyncSafety = 4;
 
 static const int ServerPort = 20000;
 static const int MaxInputsPerPacket = 63;

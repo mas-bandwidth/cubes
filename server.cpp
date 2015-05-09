@@ -235,7 +235,7 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
 
                     server.client_sync_data[client_slot].latest_input_tick = packet.tick;
 
-                    const int offset = (int) ( server.tick + TicksPerServerFrame - oldest_input_tick );
+                    const int offset = (int) ( server.tick + TicksPerServerFrame + SyncSafety - oldest_input_tick );
 
 //                    printf( "%d - %d (%d) = %d\n", (int) server.tick, (int) oldest_input_tick, (int) packet.tick, offset );
                     
@@ -255,10 +255,9 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                 {
                     // todo: process client input
 
-                    if ( packet.tick < server.tick )
-                    {
-                        printf( "client %d delivered late input: %d (%d)\n", client_slot, (int) packet.tick, (int) server.tick );
-                    }
+                    const int offset = (int) ( server.tick + TicksPerServerFrame - packet.tick );
+
+                    printf( "client input %d [%d]\n", (int) packet.tick, offset );
                 }
 
                 server.client_time_last_packet_received[client_slot] = server.current_real_time;

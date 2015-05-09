@@ -28,6 +28,12 @@ Saturday Morning, May 9th, 2015
 
     To implement this server needs to track last tick received from client.
 
+    Verified that client is delivering inputs ahead of client and introduced
+    sync safety on the server side.
+
+    Moving forward all calculations about how the server should synchronize
+    time should be made on the server. Client should just do what it is told.
+
 
 Monday Morning, May 4th, 2015
 -----------------------------

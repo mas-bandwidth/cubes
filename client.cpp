@@ -234,7 +234,7 @@ void client_apply_time_synchronization( Client & client, World & world )
     if ( client.synchronizing && client.ready_to_apply_sync )
     {
         printf( "synchronized [%d]\n", (int) client.sync_offset );
-        world.tick = client.server_tick + client.sync_offset + SyncSafety;
+        world.tick = client.server_tick + client.sync_offset;
         client.client_tick = world.tick;
         client.synchronizing = false;
         client.ready_to_apply_sync = false;

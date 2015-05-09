@@ -4,12 +4,6 @@ TODO:
 
     -----------------------------------------
 
-    Bring across my utility classes: sliding window and sequence buffer.
-
-    However, bring them across without needing the allocator support.
-
-    -----------------------------------------
-
     Implement sliding window of inputs in client.
 
     Start encoding inputs up to maximum input
