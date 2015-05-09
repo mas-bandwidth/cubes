@@ -2,6 +2,45 @@ WOULD BE NICE
 
     -----------------------------------------
 
+    Probably best to just assume the input is empty vs. holding the previous input
+
+    -----------------------------------------
+
+    If the client delivers too many late inputs in one second tell the client to reconnect.
+
+    -----------------------------------------
+
+    Client should not send any input until it has synchronized.
+
+    Right now it tries to send inputs before sync. This is pointless and annoying.
+
+    -----------------------------------------
+
+    It would be much nicer to have separate synchronizing packets
+
+    vs. input and snapshot packets.
+
+    They are really quite different.
+
+    No need to combine effectively two packets into one.
+
+    -----------------------------------------
+
+    it certainly seems that instead of going back to a synchronization stage
+    while maintaining the connection, it would be much better to just tell the
+    client that they should reconnect from scratch 
+
+    perhaps the client could bump a connection counter so we can distinguish
+    repeated packets from the same connection attempt, from new packets that
+    should tear down the client slot and restart it in a connection from scratch.
+
+    I greatly prefer this to the idea that the client should have to manage
+    complicated transitions in/out of synchronization state.
+
+    in fact if this is done then the idea of "sync sequence" can just disappear.
+
+    -----------------------------------------
+
     Implement small adjustments, eg. speed up n frames over x seconds, slow down etc.
 
     This should be only small adjustments.

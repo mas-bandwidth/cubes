@@ -22,7 +22,19 @@ struct SyncData
     uint16_t sequence = 0;
     int num_samples = 0;
     int offset = 0;
-    uint64_t latest_input_tick = 0;
+    uint64_t previous_tick = 0;
+};
+
+struct InputEntry
+{
+    uint64_t tick = 0;
+    Input input;
+};
+
+struct InputData
+{
+    uint64_t most_recent_input = 0;
+    InputEntry inputs[InputSlidingWindowSize];
 };
 
 struct Server
@@ -42,6 +54,8 @@ struct Server
     double client_time_last_packet_received[MaxClients];
 
     SyncData client_sync_data[MaxClients];
+
+    InputData client_input_data[MaxClients];
 };
 
 void server_init( Server & server )
@@ -78,6 +92,7 @@ void server_update( Server & server, uint64_t tick, double current_real_time )
                 server.client_guid[i] = 0;
                 server.client_time_last_packet_received[i] = 0.0;
                 server.client_sync_data[i] = SyncData();
+                server.client_input_data[i] = InputData();
             }
         }
     }
@@ -140,8 +155,15 @@ void server_send_packets( Server & server )
             packet.type = PACKET_TYPE_SNAPSHOT;
             packet.tick = server.tick;
             packet.synchronizing = server.client_sync_data[i].synchronizing;
-            packet.sync_offset = server.client_sync_data[i].offset;
-            packet.sync_sequence = server.client_sync_data[i].sequence;
+            if ( packet.synchronizing )
+            {
+                packet.sync_offset = server.client_sync_data[i].offset;
+                packet.sync_sequence = server.client_sync_data[i].sequence;
+            }
+            else
+            {
+                packet.input_ack = server.client_input_data[i].most_recent_input;
+            }
             server_send_packet( server, server.client_address[i], packet );
         }
     }
@@ -231,11 +253,11 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                     uint64_t oldest_input_tick = packet.tick;
                     
                     if ( server.client_sync_data[client_slot].num_samples > 0 )
-                        oldest_input_tick = server.client_sync_data[client_slot].latest_input_tick + 1;
+                        oldest_input_tick = server.client_sync_data[client_slot].previous_tick + 1;
 
-                    server.client_sync_data[client_slot].latest_input_tick = packet.tick;
+                    server.client_sync_data[client_slot].previous_tick = packet.tick;
 
-                    const int offset = (int) ( server.tick + TicksPerServerFrame + SyncSafety - oldest_input_tick );
+                    const int offset = (int) ( server.tick + ( TicksPerServerFrame - 1 ) - ( TicksPerClientFrame - 1 ) - oldest_input_tick );
 
 //                    printf( "%d - %d (%d) = %d\n", (int) server.tick, (int) oldest_input_tick, (int) packet.tick, offset );
                     
@@ -253,11 +275,18 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
 
                 if ( !packet.synchronizing && !server.client_sync_data[client_slot].synchronizing )
                 {
-                    // todo: process client input
+                    if ( packet.tick > server.client_input_data[client_slot].most_recent_input )
+                    {
+                        server.client_input_data[client_slot].most_recent_input = packet.tick;
 
-                    const int offset = (int) ( server.tick + TicksPerServerFrame - packet.tick );
-
-                    printf( "client input %d [%d]\n", (int) packet.tick, offset );
+                        for ( int i = 0; i < packet.num_inputs; ++i )
+                        {
+                            uint64_t input_tick = packet.tick - i;
+                            const int index = input_tick % InputSlidingWindowSize;
+                            server.client_input_data[client_slot].inputs[index].tick = input_tick;
+                            server.client_input_data[client_slot].inputs[index].input = packet.input[i];
+                        }
+                    }
                 }
 
                 server.client_time_last_packet_received[client_slot] = server.current_real_time;
@@ -287,6 +316,46 @@ void server_receive_packets( Server & server )
     }
 }
 
+void server_get_client_input( Server & server, int client_slot, uint64_t tick, Input * inputs, int num_inputs )
+{
+    assert( client_slot >= 0 );
+    assert( client_slot < MaxClients );
+
+    if ( server.client_state[client_slot] != CLIENT_CONNECTED || server.client_sync_data[client_slot].synchronizing )
+        return;
+
+    for ( int i = 0; i < num_inputs; ++i )
+    {
+        uint64_t input_tick = tick + i;
+        const int index = input_tick % InputSlidingWindowSize;
+        if ( server.client_input_data[client_slot].inputs[index].tick == input_tick )
+        {
+            inputs[i] = server.client_input_data[client_slot].inputs[index].input;
+        }
+        else
+        {
+            printf( "client %d dropped input %d\n", client_slot, (int) input_tick );
+
+            // todo: might want to bump a counter here. too many dropped inputs = tell client to reconnect
+
+            // todo: also a time value. if no dropped inputs for n seconds, clear dropped input count back to zero.
+        }
+    }
+
+    // lets measure exactly how far ahead the client is delivering inputs
+
+    int num_ticks_ahead = 0;
+    while ( true )
+    {
+        uint64_t input_tick = tick + num_inputs + num_ticks_ahead;
+        const int index = input_tick % InputSlidingWindowSize;
+        if ( server.client_input_data[client_slot].inputs[index].tick != input_tick )
+            break;
+        num_ticks_ahead++;
+    }
+    printf( "client %d is delivering input %d ticks early\n", client_slot, num_ticks_ahead );
+}
+
 void server_free( Server & server )
 {
     printf( "shutting down\n" );
@@ -294,20 +363,22 @@ void server_free( Server & server )
     server = Server();
 }
 
-void server_tick( World & world )
+void server_tick( World & world, const Input & input )
 {
 //    printf( "%d-%d: %f [%+.4f]\n", (int) world.frame, (int) world.tick, world.time, TickDeltaTime );
+
+    game_process_player_input( world, input, 0 );
 
     world_tick( world );
 }
 
-void server_frame( World & world, double real_time, double frame_time, double jitter )
+void server_frame( World & world, double real_time, double frame_time, double jitter, const Input * inputs )
 {
     //printf( "%d: %f [%+.2fms]\n", (int) frame, real_time, jitter * 1000 );
     
     for ( int i = 0; i < TicksPerServerFrame; ++i )
     {
-        server_tick( world );
+        server_tick( world, inputs[i] );
     }
 }
 
@@ -357,7 +428,10 @@ int server_main( int argc, char ** argv )
 
         server_send_packets( server );
 
-        server_frame( world, real_time, frame_time, jitter );
+        Input inputs[TicksPerServerFrame];
+        server_get_client_input( server, 0, world.tick, inputs, TicksPerServerFrame );
+
+        server_frame( world, real_time, frame_time, jitter, inputs );
 
         const double end_of_frame_time = platform_time();
 

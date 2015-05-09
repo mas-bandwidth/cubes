@@ -75,12 +75,29 @@ struct InputPacket : public Packet
             serialize_int( stream, num_inputs, 0, MaxInputsPerPacket );
             for ( int i = 0; i < num_inputs; ++i )
             {
-                serialize_bool( stream, input[i].left );
-                serialize_bool( stream, input[i].right );
-                serialize_bool( stream, input[i].up );
-                serialize_bool( stream, input[i].down );
-                serialize_bool( stream, input[i].push );
-                serialize_bool( stream, input[i].pull );
+                if ( i > 0 )
+                {
+                    bool different = Stream::IsWriting ? input[i] != input[i-i] : false;
+                    serialize_bool( stream, different );
+                    if ( different )
+                    {
+                        serialize_bool( stream, input[i].left );
+                        serialize_bool( stream, input[i].right );
+                        serialize_bool( stream, input[i].up );
+                        serialize_bool( stream, input[i].down );
+                        serialize_bool( stream, input[i].push );
+                        serialize_bool( stream, input[i].pull );
+                    }
+                }
+                else
+                {
+                    serialize_bool( stream, input[i].left );
+                    serialize_bool( stream, input[i].right );
+                    serialize_bool( stream, input[i].up );
+                    serialize_bool( stream, input[i].down );
+                    serialize_bool( stream, input[i].push );
+                    serialize_bool( stream, input[i].pull );
+                }
             }
         }
     }
@@ -92,6 +109,7 @@ struct SnapshotPacket : public Packet
     uint16_t sync_offset;
     uint16_t sync_sequence;
     uint64_t tick;
+    uint64_t input_ack;
 
     SERIALIZE_OBJECT( stream )
     {
@@ -105,6 +123,8 @@ struct SnapshotPacket : public Packet
         else
         {
             serialize_uint64( stream, tick );
+            serialize_uint64( stream, input_ack );
+
             // todo: serialize rest of snapshot
         }
     }

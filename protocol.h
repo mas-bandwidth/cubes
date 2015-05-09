@@ -818,7 +818,7 @@ template <typename T> void serialize_object( MeasureStream & stream, T & object 
             uint32_value = (uint32_t) value;                \
         stream.SerializeBits( uint32_value, bits );         \
         if ( Stream::IsReading )                            \
-            value = (decltype(value)) uint32_value;         \
+            value = uint32_value;                           \
     } while (0)
 
 #define serialize_bool( stream, value ) serialize_bits( stream, value, 1 )

@@ -1,4 +1,44 @@
 
+Saturday Lunch, May 9th, 2015
+-----------------------------
+
+    Implement code to send all inputs up to maximum to server in each packet
+
+    Confirmed working.
+
+    On the server keep track of most recent input received.
+
+    Add this most recent input to the snapshot packet as an input ack.
+
+    Update client code to only send inputs that have not been acked yet.
+
+    Update input packet to delta encode inputs with one bit if they have not changed.
+
+    On the server add inputs to sliding window
+
+    On the server get input from the client input sliding window before simulating tick.
+
+    If an input is not there from a client when the server needs to simulate that tick,
+    print out a warning and bump up a counter.
+
+    Make sure warning is only sent to a client once they are connected and not synchronizing.
+
+    Make sure warning only shows after client has first delivered an input!
+
+    Added code to measure exactly how early the client is delivering inputs.
+
+    The results is:
+
+    "client 0 is delivering input 10 frames early"
+
+    I think it's best to conservatively start with a highly buffered sync, and then to have the client
+    speed up slowly to close this down (after all 10 frames is just, at 240HZ... ~4ms)
+
+    Pulled it back without safety to 3 frames early.
+
+    Ideally I think the sync should be conservative, and then small adjustments should be made from this point.
+
+
 Saturday Morning, May 9th, 2015
 -------------------------------
 

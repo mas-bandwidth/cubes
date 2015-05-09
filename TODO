@@ -2,24 +2,9 @@ DONE:
 
 TODO:    
 
-    -----------------------------------------
+    Try this code running on the linux server. Going to need to upgrade the instance type to large.
 
-    Implement sliding window of inputs in client.
-
-    Start encoding inputs up to maximum input
-
-    -----------------------------------------
-
-    On the server decode these inputs and add to sliding window.
-
-    -----------------------------------------
-
-    On the server now deliver detect late inputs. 
-
-    If an input is not there from a client when the server needs to simulate that tick,
-    print out a warning and bump up a counter.
-
-    If the client delivers too many late inputs in one second return to synchronizing state.
+    What is the result? Does it still deliver inputs reliably ahead after initial sync?
 
     -----------------------------------------
 
