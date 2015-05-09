@@ -4,9 +4,21 @@ TODO:
 
     -----------------------------------------
 
+    Bring across my utility classes: sliding window and sequence buffer.
+
+    However, bring them across without needing the allocator support.
+
+    -----------------------------------------
+
     Implement sliding window of inputs in client.
 
     Start encoding inputs up to maximum input
+
+    -----------------------------------------
+
+    On the server decode these inputs and add to sliding window.
+
+    -----------------------------------------
 
     On the server now deliver detect late inputs. 
 
