@@ -42,6 +42,7 @@ struct AdjustmentData
     int min_ticks_ahead = 0;
     int num_samples = 0;
     int offset = 0;
+    uint64_t first_input = 0;
 };  
 
 struct InputEntry
@@ -354,11 +355,19 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                 {
                     if ( packet.num_inputs > 0 && packet.tick > server.client_input_data[client_slot].most_recent_input )
                     {
-                        if ( server.client_input_data[client_slot].most_recent_input == 0 )
+                        const uint64_t oldest_input_in_packet = packet.tick - ( packet.num_inputs - 1 );
+
+                        if ( server.client_input_data[client_slot].first_input == 0 )
                         {
-                            const uint64_t first_input = packet.tick - ( packet.num_inputs - 1 );
-                            server.client_input_data[client_slot].first_input = first_input;
-//                            printf( "client %d first input %d\n", client_slot, (int) first_input );
+                            server.client_input_data[client_slot].first_input = oldest_input_in_packet;
+                        }
+
+                        if ( server.client_adjustment_data[client_slot].first_input == 0 && 
+                             server.client_adjustment_data[client_slot].sequence == packet.adjustment_sequence )
+                        {
+                            server.client_adjustment_data[client_slot].first_input = oldest_input_in_packet;
+                            server.client_adjustment_data[client_slot].num_samples = 0;
+                            server.client_adjustment_data[client_slot].min_ticks_ahead = 0;
                         }
 
                         server.client_input_data[client_slot].most_recent_input = packet.tick;
@@ -495,23 +504,23 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
 
         // detect if we need to make adjustments (speed up or slow down client)
 
-        if ( server.client_adjustment_data[client_slot].num_samples > 0 )
-            server.client_adjustment_data[client_slot].min_ticks_ahead = min( server.client_adjustment_data[client_slot].min_ticks_ahead, num_ticks_ahead );
-        else
-            server.client_adjustment_data[client_slot].min_ticks_ahead = num_ticks_ahead;
-
-        server.client_adjustment_data[client_slot].num_samples++;
-
-        if ( server.client_adjustment_data[client_slot].num_samples == MaxAdjustmentSamples )
+        if ( tick >= server.client_adjustment_data[client_slot].first_input )
         {
-            server.client_adjustment_data[client_slot].offset = - clamp( server.client_adjustment_data[client_slot].min_ticks_ahead - InputSafety, AdjustmentOffsetMinimum, AdjustmentOffsetMaximum );
-            printf( "client %d is %d ticks ahead: adjustment offset = %+d\n", client_slot, server.client_adjustment_data[client_slot].min_ticks_ahead, server.client_adjustment_data[client_slot].offset );
-            server.client_adjustment_data[client_slot].min_ticks_ahead = 0;
-            server.client_adjustment_data[client_slot].num_samples = 0;
+            if ( server.client_adjustment_data[client_slot].num_samples > 0 )
+                server.client_adjustment_data[client_slot].min_ticks_ahead = min( server.client_adjustment_data[client_slot].min_ticks_ahead, num_ticks_ahead );
+            else
+                server.client_adjustment_data[client_slot].min_ticks_ahead = num_ticks_ahead;
 
-            // hack: only make one adjustment for the moment!
-            if ( server.client_adjustment_data[client_slot].sequence == 0 )
+            server.client_adjustment_data[client_slot].num_samples++;
+
+            if ( server.client_adjustment_data[client_slot].num_samples == MaxAdjustmentSamples )
             {
+                server.client_adjustment_data[client_slot].offset = - clamp( server.client_adjustment_data[client_slot].min_ticks_ahead - InputSafety, AdjustmentOffsetMinimum, AdjustmentOffsetMaximum );
+                //if ( server.client_adjustment_data[client_slot].offset != 0 )
+                    printf( "client %d is %d ticks ahead: adjustment offset = %+d\n", client_slot, server.client_adjustment_data[client_slot].min_ticks_ahead, server.client_adjustment_data[client_slot].offset );
+                server.client_adjustment_data[client_slot].min_ticks_ahead = 0;
+                server.client_adjustment_data[client_slot].num_samples = 0;
+                server.client_adjustment_data[client_slot].first_input = 0;
                 server.client_adjustment_data[client_slot].sequence++;
             }
         }

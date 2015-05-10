@@ -58,12 +58,13 @@ struct ConnectionDeniedPacket : public Packet
 
 struct InputPacket : public Packet
 {
-    bool synchronizing;
-    bool bracketed;
-    uint16_t sync_offset;
-    uint16_t sync_sequence;
-    uint64_t tick;
-    int num_inputs;
+    bool synchronizing = false;
+    bool bracketed = false;
+    uint16_t sync_offset = 0;
+    uint16_t sync_sequence = 0;
+    uint16_t adjustment_sequence = 0;
+    uint64_t tick = 0;
+    int num_inputs = 0;
     Input input[MaxInputsPerPacket];
 
     SERIALIZE_OBJECT( stream )
@@ -77,8 +78,9 @@ struct InputPacket : public Packet
         }
         else
         {
-            serialize_bool( stream, bracketed );
             serialize_uint64( stream, tick );
+            serialize_bool( stream, bracketed );
+            serialize_uint16( stream, adjustment_sequence );
             serialize_int( stream, num_inputs, 0, MaxInputsPerPacket );
             for ( int i = 0; i < num_inputs; ++i )
             {

@@ -1,4 +1,33 @@
 
+Sunday Lunch, May 10th, 2015
+----------------------------
+
+    Add adjustment sequence to input packet.
+
+    Client send current adjustment sequence in input packet.
+
+    Server should track first input for new adjust sequence.
+
+    This way the server can defer measurement of an adjustment until after the inputs
+    come back with that adjustment.
+
+    This avoids feedback getting into the measurement!
+
+    It seems to work.
+
+    Would be great if the client would print out the # of ticks between client tick and server tick.
+
+    This is the amount of resimulation that would be required for client side prediction.
+
+    It's around 15 - 20 ticks over LAN. This seems reasonable.
+
+    Client bracketing consistently to 0 consistently is a bit weird.
+
+    Tried adjusting server to tick at 60HZ. Reduces from 15-20 to 12 ticks client side prediction.
+
+    Seems reasonable.
+
+
 Sunday Morning, May 10th, 2015
 ------------------------------
 

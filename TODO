@@ -2,14 +2,16 @@ DONE:
 
 TODO:
 
-    Add adjustment sequence to input packet.
+    --------------------------
 
-    Server should track first input for new adjust sequence.
+    Client needs to apply the adjustment gradually rather than immediately.
 
-    This way the server can defer measurement of an adjustment until after the inputs
-    come back with that adjustment.
+    Seems premature to do this before the client is running simulation though.
 
-    This avoids feedback getting into the measurement!
+    So way forward would be for the client to run a simulation.
+
+    --------------------------
+
 
 
 

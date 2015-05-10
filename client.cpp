@@ -200,8 +200,9 @@ void client_send_packets( Client & client )
             }
             else
             {
-                packet.bracketed = client.bracketed;
                 packet.tick = client.client_tick + TicksPerClientFrame - 1;
+                packet.adjustment_sequence = client.adjustment_sequence;
+                packet.bracketed = client.bracketed;
                 packet.num_inputs = 0;
                 for ( int i = 0; i < MaxInputsPerPacket; ++i )
                 {
@@ -294,8 +295,9 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                         client.reconnect = packet.reconnect;
                         client.bracketing = packet.bracketing;
                         client.input_ack = packet.input_ack;
+                        client.server_tick = packet.tick;
 
-                        if ( client.adjustment_sequence != packet.adjustment_sequence )
+                        if ( client.adjustment_sequence != packet.adjustment_sequence ) // && packet.adjustment_offset != 0 )
                         {
                             client.adjustment_sequence = packet.adjustment_sequence;
                             client.adjustment_offset = packet.adjustment_offset;
@@ -363,7 +365,7 @@ void client_apply_time_synchronization( Client & client, World & world )
         // will be made over the course of one second the client will tick run slightly more or less
         // ticks than usual
 
-        printf( "client adjustment [%+d]\n", (int) client.adjustment_offset );
+        printf( "client adjustment [%+d]. client side prediction = %d ticks\n", (int) client.adjustment_offset, (int) ( client.client_tick - client.server_tick ) );
 
         const uint64_t original_world_tick = world.tick;
 
