@@ -1,5 +1,55 @@
 PLANNING
 
+    This is meant to give some warning if the guy is falling behind (due to network conditions changing, 
+    or the client hitching or VSYNC is not quite 60fps or whatever.)
+
+    Note that if the server hitches, it means the client is now further AHEAD -- this is not great,
+    because the client needs more CPU for resimulation, and has greater lag on server objects, 
+    but it does not cause client inputs to get dropped.
+
+    If he *is* falling behind then we need to speed him up with a small adjustment, eg. over the next
+    one second, please speed up n ticks.
+
+    Adjustments should not be continuous. They should be made, and then evaluated for a second,
+    and then another adjustment should be made if 
+
+    -----------------------------------------
+
+    The more I think about it, the more it seems that the synchronization is wrong.
+
+    It is not measuring the minimum amount of time required for the client to deliver input to server.
+
+    It is measuring the round trip time from server -> client -> server.
+
+    This is good to get a conservative starting point for synchronization.
+
+    But the algorithm needs bracketing to converge on the actual value for inputs.
+
+    It's much better to do this bracketing during the synchronization stage
+    because there is no need to simulate or do any extra work while converging.
+
+    In contrast, if the convergence is left till after synchronization, then the 
+    client is going to start really far ahead with lots of resimulation, which will
+    have a high CPU cost and could cause problems.
+
+    Design bracketing system for better synchronization.
+
+    First synchronization is conservative based on RTT...
+
+    Then binary search is used to refine this bracketing....
+
+    Try half-way between the conservative estimate.
+
+    Does this deliver inputs late? (define late as within a certain amount of safety frames...)
+
+    If yes, then consider halving again.
+
+    If not, then move halfway between current estimate (bad) and conservative estimate (good).
+
+    Repeat n times.
+
+    If a certain number of tries are exceeded -- deny client with "synchronization failure"
+
     ------------------------------------------
 
     I see a binary search where the server tells the client to repeatedly adjust forward/back

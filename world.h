@@ -8,6 +8,7 @@
 
 struct World
 {
+    bool active = true;                                 // true if the world is active (eg. player input is processed, physics runs)
     uint64_t frame = 0;                                 // current frame (server or client frame depending on context)
     uint64_t tick = 0;                                  // current tick (ticks @ 240HZ)
     double time = 0.0;                                  // current time in seconds
@@ -53,17 +54,20 @@ inline void world_setup_cubes( World & world )
 
 inline void world_tick( World & world )
 {
-    world.cube_manager->UpdateAuthority( world.time, TickDeltaTime );
+    if ( world.active )
+    {
+        world.cube_manager->UpdateAuthority( world.time, TickDeltaTime );
 
-    world.cube_manager->PrePhysicsUpdate();
+        world.cube_manager->PrePhysicsUpdate();
 
-    world.physics_manager->Update( world.tick, world.time, TickDeltaTime );
+        world.physics_manager->Update( world.tick, world.time, TickDeltaTime );
 
-    world.physics_manager->WalkInteractions( world.entity_manager );
+        world.physics_manager->WalkInteractions( world.entity_manager );
 
-    world.cube_manager->PostPhysicsUpdate();
+        world.cube_manager->PostPhysicsUpdate();
 
-    world.entity_manager->UpdateAuthority( world.time, TickDeltaTime );
+        world.entity_manager->UpdateAuthority( world.time, TickDeltaTime );
+    }
 
     world.time += TickDeltaTime;
     world.tick++;

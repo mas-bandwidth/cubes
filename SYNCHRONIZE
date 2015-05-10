@@ -1,0 +1,48 @@
+initial synchronize: [+100]
+
+0                           100
+
+"hey client, subtract 50 from your client tick"
+
+0             50            100
+
+
+
+
+
+
+success (no late inputs):
+
+"hey client, subtract 25 from your client tick"
+
+0      25     50
+
+etc.
+
+
+
+
+
+failure (late inputs ):
+
+"hey client. whoops. add 25/2 to your client tick"
+
+25    37.5    50
+
+failure again:
+
+"hey client. whoops #2. add 25/2/2 to your client tick"
+
+37.5    43.75    50
+
+etc...
+
+
+
+So it seems that just working out the interval, and then either adding or subtracting half does the job.
+
+Of course if network conditions change during the synchronization all bets are off.
+
+Ideally synchronization would detect that it couldn't find a good bracket and fail the client (sync failure)
+
+The client could interpret this as trying to synchronize again from scratch n times, or just as a failure.

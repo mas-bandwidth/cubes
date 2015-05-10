@@ -6,7 +6,12 @@
 static const int MaxInputsPerPacket = 63;
 static const int InputSlidingWindowSize = 256;
 
-static const int MaxSyncSamples = 64;
+static const int MaxSyncSamples = 32;
+static const int MaxBracketSamples = 32;
+static const int BracketSafety = 8;
+
+static const int ReconnectDroppedInputs = 16;
+static const double DroppedInputForgetTime = 5.0f;
 
 static const int ServerPort = 20000;
 static const float Timeout = 5.0f;

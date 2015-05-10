@@ -14,6 +14,7 @@ auto server_address = Address( "127.0.0.1", ServerPort );
 //auto server_address = Address( "240.19.82.126", ServerPort );
 
 #define HEADLESS 1
+#define RUN_TESTS 1
 
 #if !HEADLESS
 #include <GL/glew.h>
@@ -58,8 +59,18 @@ struct Client
     uint16_t sync_sequence;
     uint16_t sync_offset;
 
+    bool bracketing;
+    uint16_t bracket_offset;
+    bool ready_to_apply_bracket_offset;
+    bool bracketed;
+
+    bool reconnect;
+
+    bool active;
     uint64_t input_ack;
     InputEntry inputs[InputSlidingWindowSize];
+
+    bool suppress_send_packets;
 };
 
 void client_init( Client & client )
@@ -68,6 +79,7 @@ void client_init( Client & client )
     client.socket = new Socket( 0 );
     client.guid = rand();
     client.state = CLIENT_DISCONNECTED;
+    client.suppress_send_packets = false;
 }
 
 void client_connect( Client & client, const Address & address, double current_real_time )
@@ -85,9 +97,22 @@ void client_connect( Client & client, const Address & address, double current_re
     client.synchronized = false;
     client.sync_sequence = 0;
     client.sync_offset = 0;
+    client.bracketing = false;
+    client.bracketed = false;
+    client.bracket_offset = 0;
+    client.ready_to_apply_bracket_offset = false;
+    client.active = false;
     client.input_ack = 0;
     client.connect_sequence++;
+    client.reconnect = false;
     memset( client.inputs, 0, sizeof( client.inputs ) );
+}
+
+void client_reconnect( Client & client, double current_real_time )
+{
+    printf( "client reconnecting\n" );
+    Address address = client.server_address;
+    client_connect( client, address, current_real_time );
 }
 
 void client_disconnect( Client & client )
@@ -138,6 +163,12 @@ void client_send_packet( Client & client, Packet & packet )
 
 void client_send_packets( Client & client )
 {
+    if ( client.suppress_send_packets )
+    {
+//        printf( "suppress send packets\n" );
+        return;
+    }
+
     switch ( client.state )
     {
         case CLIENT_SENDING_CONNECT_REQUEST:
@@ -163,6 +194,7 @@ void client_send_packets( Client & client )
             }
             else
             {
+                packet.bracketed = client.bracketed;
                 packet.tick = client.client_tick + TicksPerClientFrame - 1;
                 packet.num_inputs = 0;
                 for ( int i = 0; i < MaxInputsPerPacket; ++i )
@@ -222,12 +254,12 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
 
         case PACKET_TYPE_SNAPSHOT:
         {
-            SnapshotPacket & packet = (SnapshotPacket&) base_packet;
-            if ( packet.tick > client.server_tick )
+            SnapshotPacket & packet = (SnapshotPacket&) base_packet;            
+            if ( client.state == CLIENT_CONNECTED && packet.tick > client.server_tick )
             {
                 if ( !client.synchronizing && packet.synchronizing )
                 {
-                    printf( "synchronizing\n" );
+                    printf( "client synchronizing\n" );
                     client.synchronizing = true;
                 }
                 
@@ -241,13 +273,26 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                     {
                         client.server_tick = packet.tick;
                         client.sync_offset = packet.sync_offset;
-                        client.sync_sequence = packet.sync_sequence;
                     }
                 }
                 else
                 {
                     if ( !packet.synchronizing )
                     {
+                        if ( !client.bracketing && packet.bracketing )
+                        {
+                            printf( "client started bracketing\n" );
+                        }
+
+                        if ( client.bracketing && !packet.bracketing )
+                        {
+                            printf( "client finished bracketing\n" );
+                            client.ready_to_apply_bracket_offset = true;
+                            client.bracket_offset = packet.bracket_offset;
+                        }
+
+                        client.reconnect = packet.reconnect;
+                        client.bracketing = packet.bracketing;
                         client.input_ack = packet.input_ack;
                     }
                 }
@@ -283,13 +328,29 @@ void client_apply_time_synchronization( Client & client, World & world )
 {
     if ( client.synchronizing && client.ready_to_apply_sync )
     {
-        printf( "synchronized [+%d]\n", (int) client.sync_offset );
+        printf( "client synchronized [+%d]\n", (int) client.sync_offset );
         world.tick = client.server_tick + client.sync_offset;
         client.client_tick = world.tick;
         client.synchronizing = false;
         client.ready_to_apply_sync = false;
         client.synchronized = true;
     }
+
+    if ( client.ready_to_apply_bracket_offset )
+    {
+        printf( "client bracketed [-%d]\n", (int) client.bracket_offset );
+        client.ready_to_apply_bracket_offset = false;
+        client.bracketed = true;
+
+        printf( "*** client is active ***\n" );
+        client.active = true;
+        client.input_ack = 0;
+        world.tick -= client.bracket_offset;
+        client.client_tick = world.tick;
+        memset( client.inputs, 0, sizeof( client.inputs ) );
+    }
+
+    world.active = client.active;
 }
 
 void client_free( Client & client )
@@ -350,6 +411,7 @@ int client_main( int argc, char ** argv )
     World world;
     world_init( world );
     world_setup_cubes( world );
+    world_tick( world );
 
     signal( SIGINT, interrupt_handler );
 
@@ -407,11 +469,21 @@ int client_main( int argc, char ** argv )
 
         world.frame++;
 
-        if ( world.frame == 20 )
-        {
-            printf( "reconnect\n" );
+#if RUN_TESTS
 
-            client_connect( client, server_address, platform_time() );
+        if ( world.frame == 10 )
+            client.reconnect = true;
+
+        if ( ( world.frame > 500 && world.frame < 600 ) || ( world.frame > 1000 && world.frame < 1010 ) )
+            client.suppress_send_packets = true;
+        else
+            client.suppress_send_packets = false;
+
+#endif // #if RUN_TESTS
+
+        if ( client.reconnect )
+        {
+            client_reconnect( client, platform_time() );
         }
     }
 
@@ -500,6 +572,7 @@ int client_main( int argc, char ** argv )
     World world;
     world_init( world );
     world_setup_cubes( world );
+    world_tick( world );
 
     glfwInit();
 

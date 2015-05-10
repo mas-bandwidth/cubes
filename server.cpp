@@ -25,6 +25,21 @@ struct SyncData
     uint64_t previous_tick = 0;
 };
 
+struct BracketData
+{
+    bool bracketing = false;
+    int num_samples = 0;
+    int offset = 0;
+    bool bracketed = false;
+};
+
+struct AdjustmentData
+{
+    bool reconnect = false;
+    int num_dropped_inputs = 0;
+    double time_last_dropped_input = 0.0;
+};  
+
 struct InputEntry
 {
     uint64_t tick = 0;
@@ -57,6 +72,10 @@ struct Server
     double client_time_last_packet_received[MaxClients];
 
     SyncData client_sync_data[MaxClients];
+
+    BracketData client_bracket_data[MaxClients];
+
+    AdjustmentData client_adjustment_data[MaxClients];
 
     InputData client_input_data[MaxClients];
 };
@@ -97,6 +116,8 @@ void server_update( Server & server, uint64_t tick, double current_real_time )
                 server.client_connect_sequence[i] = 0;
                 server.client_time_last_packet_received[i] = 0.0;
                 server.client_sync_data[i] = SyncData();
+                server.client_bracket_data[i] = BracketData();
+                server.client_adjustment_data[i] = AdjustmentData();
                 server.client_input_data[i] = InputData();
             }
         }
@@ -163,10 +184,12 @@ void server_send_packets( Server & server )
             if ( packet.synchronizing )
             {
                 packet.sync_offset = server.client_sync_data[i].offset;
-                packet.sync_sequence = server.client_sync_data[i].sequence;
             }
             else
             {
+                packet.reconnect = server.client_adjustment_data[i].reconnect;
+                packet.bracketing = server.client_bracket_data[i].bracketing;
+                packet.bracket_offset = server.client_bracket_data[i].offset;
                 packet.input_ack = server.client_input_data[i].most_recent_input;
             }
             server_send_packet( server, server.client_address[i], packet );
@@ -207,6 +230,8 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                     server.client_time_last_packet_received[client_slot] = server.current_real_time;
                     server.client_input_data[client_slot] = InputData();
                     server.client_sync_data[client_slot] = SyncData();
+                    server.client_bracket_data[client_slot] = BracketData();
+                    server.client_adjustment_data[client_slot] = AdjustmentData();
                     server.client_sync_data[client_slot].synchronizing = true;
 
                     // send connection accepted resonse
@@ -249,6 +274,10 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                     char buffer[256];
                     printf( "client %d reconnecting %s (%d)\n", client_slot, from.ToString( buffer, sizeof( buffer ) ), packet.connect_sequence );
 
+                    // todo: this should be a function -- the code is completely common with initial connect
+
+                    // eg: server_connect_client( ... )
+
                     // client reconnect
                     server.client_state[client_slot] = CLIENT_CONNECTING;
                     server.client_guid[client_slot] = packet.client_guid;
@@ -257,6 +286,8 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                     server.client_time_last_packet_received[client_slot] = server.current_real_time;
                     server.client_input_data[client_slot] = InputData();
                     server.client_sync_data[client_slot] = SyncData();
+                    server.client_bracket_data[client_slot] = BracketData();
+                    server.client_adjustment_data[client_slot] = AdjustmentData();
                     server.client_sync_data[client_slot].synchronizing = true;
 
                     // send connection accepted resonse
@@ -277,8 +308,6 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
             int client_slot = server_find_client_slot( server, from );
             if ( client_slot != -1 )
             {
-                // todo: it would be really great if the client went to a "syncronizing" state here instead
-
                 if ( server.client_state[client_slot] == CLIENT_CONNECTING )
                 {
                     char buffer[256];
@@ -298,7 +327,7 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
 
                     const int offset = max( 0, (int) ( server.tick + TicksPerServerFrame - oldest_input_tick ) );
 
-                    printf( "%d - %d (%d) = %d\n", (int) server.tick, (int) oldest_input_tick, (int) packet.tick, offset );
+//                    printf( "%d - %d (%d) = %d\n", (int) server.tick, (int) oldest_input_tick, (int) packet.tick, offset );
                     
                     server.client_sync_data[client_slot].num_samples++;
                     server.client_sync_data[client_slot].offset = max( offset, server.client_sync_data[client_slot].offset );
@@ -309,15 +338,23 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                         printf( "client %d synchronized [+%d]\n", client_slot, server.client_sync_data[client_slot].offset );
                         server.client_sync_data[client_slot].synchronizing = false;
                         server.client_sync_data[client_slot].sequence++;
+                        server.client_bracket_data[client_slot].bracketing = true;
+                        printf( "client %d started bracketing\n", client_slot );
                     }
                 }
 
-                if ( !packet.synchronizing && !server.client_sync_data[client_slot].synchronizing )
+                if ( !packet.synchronizing && !server.client_sync_data[client_slot].synchronizing &&
+                     ( ( !packet.bracketed && server.client_bracket_data[client_slot].bracketing ) ||
+                       (  packet.bracketed && server.client_bracket_data[client_slot].bracketed ) ) )
                 {
-                    if ( packet.tick > server.client_input_data[client_slot].most_recent_input )
+                    if ( packet.num_inputs > 0 && packet.tick > server.client_input_data[client_slot].most_recent_input )
                     {
                         if ( server.client_input_data[client_slot].most_recent_input == 0 )
-                            server.client_input_data[client_slot].first_input = packet.tick;
+                        {
+                            const uint64_t first_input = packet.tick - ( packet.num_inputs - 1 );
+                            server.client_input_data[client_slot].first_input = first_input;
+//                            printf( "client %d first input %d\n", client_slot, (int) first_input );
+                        }
 
                         server.client_input_data[client_slot].most_recent_input = packet.tick;
 
@@ -360,10 +397,13 @@ void server_receive_packets( Server & server )
     }
 }
 
-void server_get_client_input( Server & server, int client_slot, uint64_t tick, Input * inputs, int num_inputs )
+void server_get_client_input( Server & server, int client_slot, uint64_t tick, Input * inputs, int num_inputs, double real_time )
 {
     assert( client_slot >= 0 );
     assert( client_slot < MaxClients );
+
+    if ( server.client_adjustment_data[client_slot].reconnect )
+        return;
 
     if ( server.client_state[client_slot] != CLIENT_CONNECTED )
         return;
@@ -377,26 +417,7 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
     if ( tick < server.client_input_data[client_slot].first_input )
         return;
 
-    for ( int i = 0; i < num_inputs; ++i )
-    {
-        uint64_t input_tick = tick + i;
-        const int index = input_tick % InputSlidingWindowSize;
-        if ( server.client_input_data[client_slot].inputs[index].tick == input_tick )
-        {
-            inputs[i] = server.client_input_data[client_slot].inputs[index].input;
-        }
-        else
-        {
-            printf( "client %d dropped input %d\n", client_slot, (int) input_tick );
-
-            // todo: might want to bump a counter here. too many dropped inputs = tell client to reconnect
-
-            // todo: also a time value. if no dropped inputs for n seconds, clear dropped input count back to zero.
-        }
-    }
-
-/*
-    // lets measure exactly how far ahead the client is delivering inputs
+    // measure exactly how far ahead the client is delivering inputs
 
     int num_ticks_ahead = 0;
     while ( true )
@@ -407,8 +428,76 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
             break;
         num_ticks_ahead++;
     }
-    printf( "client %d is delivering input %d ticks early\n", client_slot, num_ticks_ahead );
+
+    /*
+    if ( !server.client_bracket_data[client_slot].bracketing )
+    {
+        printf( "client %d delivered input %d ticks early\n", client_slot, num_ticks_ahead );
+    }
     */
+    
+    if ( server.client_bracket_data[client_slot].bracketing )
+    {
+        num_ticks_ahead = max( 0, num_ticks_ahead - BracketSafety );
+
+        if ( server.client_bracket_data[client_slot].num_samples > 0 )
+            server.client_bracket_data[client_slot].offset = min( num_ticks_ahead, server.client_bracket_data[client_slot].offset );
+        else
+            server.client_bracket_data[client_slot].offset = num_ticks_ahead;
+
+//        printf( "client %d bracketing offset = %d\n", client_slot, (int) server.client_bracket_data[client_slot].offset );
+
+        server.client_bracket_data[client_slot].num_samples++;
+
+        if ( server.client_bracket_data[client_slot].num_samples == MaxBracketSamples )
+        {
+            printf( "client %d bracketed [-%d]\n", client_slot, server.client_bracket_data[client_slot].offset );
+            server.client_input_data[client_slot] = InputData();
+            server.client_bracket_data[client_slot].bracketing = false;
+            server.client_bracket_data[client_slot].bracketed = true;
+        }
+    }
+    else
+    {
+        // client is fully connected. gather inputs for simulation
+
+        for ( int i = 0; i < num_inputs; ++i )
+        {
+            uint64_t input_tick = tick + i;
+            const int index = input_tick % InputSlidingWindowSize;
+            if ( server.client_input_data[client_slot].inputs[index].tick == input_tick )
+            {
+                inputs[i] = server.client_input_data[client_slot].inputs[index].input;
+            }
+            else
+            {
+                // if the client drops too many inputs, force them to reconnect and resynchronize
+
+                printf( "client %d dropped input %d\n", client_slot, (int) input_tick );
+
+                server.client_adjustment_data[client_slot].num_dropped_inputs++;
+                server.client_adjustment_data[client_slot].time_last_dropped_input = real_time;
+
+                if ( server.client_adjustment_data[client_slot].num_dropped_inputs >= ReconnectDroppedInputs )
+                {
+                    printf( "client %d dropped too many inputs. forcing reconnect\n", client_slot );
+                    server.client_adjustment_data[client_slot].reconnect = true;
+                    return;
+                }
+            }
+        }
+
+        // if the client has not had any dropped inputs for a period of time, reset dropped input count
+
+        const double time_since_last_dropped_input = real_time - server.client_adjustment_data[client_slot].time_last_dropped_input;
+
+        if ( server.client_adjustment_data[client_slot].num_dropped_inputs > 0 &&
+             time_since_last_dropped_input > DroppedInputForgetTime )
+        {
+            printf( "client %d forgetting dropped inputs\n", client_slot );
+            server.client_adjustment_data[client_slot].num_dropped_inputs = 0;
+        }
+    }
 }
 
 void server_free( Server & server )
@@ -477,6 +566,8 @@ int server_main( int argc, char ** argv )
 
         const double jitter = real_time - frame_time;
 
+        const double start_of_frame_time = platform_time();
+
         server_update( server, world.tick, real_time );
 
         server_receive_packets( server );
@@ -484,7 +575,7 @@ int server_main( int argc, char ** argv )
         server_send_packets( server );
 
         Input inputs[TicksPerServerFrame];
-        server_get_client_input( server, 0, world.tick, inputs, TicksPerServerFrame );
+        server_get_client_input( server, 0, world.tick, inputs, TicksPerServerFrame, start_of_frame_time );
 
         server_frame( world, real_time, frame_time, jitter, inputs );
 
@@ -501,8 +592,6 @@ int server_main( int argc, char ** argv )
 
         if ( num_dropped_frames > 0 )
         {
-            // todo: would be nice to print out length of previous frame in milliseconds x/y here
-
             printf( "dropped frame %d (%d)\n", (int) world.frame, num_dropped_frames );
         }
 

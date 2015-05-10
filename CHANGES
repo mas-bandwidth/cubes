@@ -1,4 +1,89 @@
 
+Late Saturday Evening, May 9th, 2015
+------------------------------------
+
+    Added concept of bracketing.
+
+    For now I just want the client to go into bracketing mode post-synchronize
+
+    I don't think a recursive binary search is required.
+
+    Just run with the post synchronize for a while.
+
+    Work out what is the latest that inputs are delivered
+
+    Then make that adjustment.
+
+    The rest should just be handled via the small adjustments (speed up / slow down)
+
+    I don't think synchronize sequence is required anymore. There is only one synchronize state.
+
+    Removed sync sequence, bracket sequence.
+
+    Did a bunch of stuff and now bracketing triggers a single adjustment. It seems to be basically perfect!
+
+    Add some amount of safety to the bracketing, eg. 8 frames (1/30th of a second @ 240HZ)
+
+    Implemented. Verified that the client is now delivering inputs with safety, however
+    in certain circumstances you can get oscillation, eg. 4 frames on/off because there
+    is jitter in packet delivery to server, eg. 2 frames one frame etc.
+
+    This indicates that you shouldn't try to be perfect with the adjustment, just get it
+    in the ballpark, and then make small adjustments if it is clearly too far ahead or behind.
+
+    Client is sometimes sending 0 inputs.
+
+    Added code to handle this and ignore.
+
+    Also made sure that first input is the oldest input tick in the input packet, not the newest.
+
+    Even so, still getting a few old inputs coming in after synchronize. 
+
+    Could it be old input packets still in flight?
+
+    Yes appears to be so.
+
+    To ensure that only post-bracketed inputs arrive I added "bracketed" to the input packet
+    and ignore bracketed while bracketing, and non-bracketed inputs after bracketing has finished.
+
+    Seems to fix the dropped inputs.
+
+    Client seems to drop first frame post becoming active, presumably because of lazy init in some physics stuff? Fuck...
+
+    Fixed by fake pumping the world after init on client (world is still active at that point)
+
+    Renamed "bracket adjustment" to "bracket offset" so it is not confused with adjustments 
+    (small speed up slow down adjustments made while the client is active post-bracketing)
+
+    Added client adjust data on server.
+
+    Server has a per-client reconnect flag inside adjust data.
+
+    Server sends that reconnect flag to client inside snapshot packet.
+
+    Each time client drops an input, bump a counter. If the client exceeds count, set reconnect to true.
+
+    If the client sees reconnect, start a reconnect.
+
+    Done this and made snapshots not get through if client is in a connecting state.
+
+    Verify this stuff all works.
+
+    Find a way to simulate this, eg. fake dropped inputs.
+
+    Added a 'suppress send packets' flag and set it for a brief period on the client.
+
+    Seems that bracketing is not working properly on the reconnect post set client reconnect. Why?
+
+    Found it. Bracketed was not getting cleared on client-side connect.
+
+    If the client has not dropped inputs for n seconds, reset # of dropped inputs back to 0.
+
+    This way it is not overly harsh of infrequent dropped inputs. They don't accumulate.
+
+    Added #if RUN_TESTS on client and hooked up a test for forgetting dropped inputs. Works.
+
+
 Saturday Evening, May 9th, 2015
 -------------------------------
 

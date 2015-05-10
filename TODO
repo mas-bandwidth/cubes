@@ -1,71 +1,14 @@
 DONE:
 
-    The more I think about it, the more it seems that the synchronization is wrong.
+TODO:
 
-    It is not measuring the minimum amount of time required for the client to deliver input to server.
-
-    It is measuring the round trip time from server -> client -> server.
-
-    This is good to get a conservative starting point for synchronization.
-
-    But the algorithm needs bracketing to converge on the actual value for inputs.
-
-    It's much better to do this bracketing during the synchronization stage
-    because there is no need to simulate or do any extra work while converging.
-
-    In contrast, if the convergence is left till after synchronization, then the 
-    client is going to start really far ahead with lots of resimulation, which will
-    have a high CPU cost and could cause problems.
-
-    Design bracketing system for better synchronization.
-
-    First synchronization is conservative based on RTT...
-
-    Then binary search is used to refine this bracketing....
-
-    Try half-way between the conservative estimate.
-
-    Does this deliver inputs late? (define late as within a certain amount of safety frames...)
-
-    If yes, then consider halving again.
-
-    If not, then move halfway between current estimate (bad) and conservative estimate (good).
-
-    Repeat n times.
-
-    If a certain number of tries are exceeded -- deny client with "synchronization failure"
-
-TODO:    
-
-    All I have to do now is determine how to structure the protocol to implement this.
-
-    Right now synchronization stops as soon as the conservative estimate exists.
-
-    I think if I create a new concept "bracketing" and run the normal input code,
-    but don't run simulation or anything like that until bracketing has finished
-    this could work.
-
-    Bracketing is an annoying term.
-
-    It would be nicer if it all worked within "synchronization" state.
-    
-
-
-
-
-
-
-
-
-
-
-
+    *** STOP HERE ***
 
     -----------------------------------------
 
-    Design code for client to speed up and slow down.
+    Design code for adjustment to speed up and slow down.
 
-    Design code to detect if too far ahead or too far behind and tell the client to reconnect.
+    Implement adjustment.
 
     -----------------------------------------
 

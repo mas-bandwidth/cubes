@@ -2,6 +2,30 @@ WOULD BE NICE
 
     -----------------------------------------
 
+    I don't think "frame" is really a property of the world.
+
+    World shouldn't care about frames at all.
+
+    World should only care about ticks.
+
+    Frame belongs to client/server.
+
+    -----------------------------------------
+
+    Server is going to need an easy way to detect when clients are active vs. not
+
+    Right now many situations make clients active or not.
+
+    But the server just wants one place: server_activate_client, server_deactivate_client.
+
+    -----------------------------------------
+
+    Not nice that the adjustment is forever sent from server -> client after being applied.
+
+    It's functional sure, but inefficient.
+
+    -----------------------------------------
+
     Probably best to just assume the input is empty vs. holding the previous input
 
     -----------------------------------------

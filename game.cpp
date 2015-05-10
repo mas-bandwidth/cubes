@@ -5,6 +5,9 @@
 
 void game_process_player_input( World & world, const Input & input, int player_id )
 {
+    if ( !world.active )
+        return;
+
     const double t = world.time * 60;
     
     assert( world.entity_manager );
