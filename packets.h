@@ -24,26 +24,31 @@ struct Packet
 struct ConnectionRequestPacket : public Packet
 {
     uint64_t client_guid;
+    uint16_t connect_sequence;
 
     SERIALIZE_OBJECT( stream )
     {
         serialize_uint64( stream, client_guid );
+        serialize_uint16( stream, connect_sequence );
     }
 };
 
 struct ConnectionAcceptedPacket : public Packet
 {
     uint64_t client_guid;
+    uint16_t connect_sequence;
 
     SERIALIZE_OBJECT( stream )
     {
         serialize_uint64( stream, client_guid );
+        serialize_uint16( stream, connect_sequence );
     }
 };
 
 struct ConnectionDeniedPacket : public Packet
 {
     uint64_t client_guid;
+    uint16_t connect_sequence;
 
     SERIALIZE_OBJECT( stream )
     {

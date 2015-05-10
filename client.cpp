@@ -45,6 +45,7 @@ struct Client
     uint64_t guid;
     ClientState state;
     Address server_address;
+    uint16_t connect_sequence;
     
     double current_real_time;
     double time_last_packet_received;
@@ -72,7 +73,7 @@ void client_init( Client & client )
 void client_connect( Client & client, const Address & address, double current_real_time )
 {
     char buffer[256];
-    printf( "client connecting to %s\n", address.ToString( buffer, sizeof( buffer ) ) );
+    printf( "client connecting to %s (%d)\n", address.ToString( buffer, sizeof( buffer ) ), client.connect_sequence + 1 );
     client.state = CLIENT_SENDING_CONNECT_REQUEST;
     client.server_address = address;
     client.client_tick = 0;
@@ -85,6 +86,7 @@ void client_connect( Client & client, const Address & address, double current_re
     client.sync_sequence = 0;
     client.sync_offset = 0;
     client.input_ack = 0;
+    client.connect_sequence++;
     memset( client.inputs, 0, sizeof( client.inputs ) );
 }
 
@@ -100,7 +102,7 @@ void client_update( Client & client, double current_real_time )
     {
         if ( current_real_time > client.time_last_packet_received + Timeout )
         {
-            printf( "client timed out\n" );
+            printf( "client timed out (%d)\n", client.connect_sequence );
             client.state = CLIENT_TIMED_OUT;
         }
     }
@@ -143,6 +145,7 @@ void client_send_packets( Client & client )
             ConnectionRequestPacket packet;
             packet.type = PACKET_TYPE_CONNECTION_REQUEST;
             packet.client_guid = client.guid;
+            packet.connect_sequence = client.connect_sequence;
             client_send_packet( client, packet );
         }
         break;
@@ -171,8 +174,10 @@ void client_send_packets( Client & client )
                     packet.input[i] = client.inputs[index].input;
                     packet.num_inputs++;
                 }
+                /*
                 if ( client.synchronized )
                     printf( "client sent %d inputs\n", packet.num_inputs );
+                    */
             }
             client_send_packet( client, packet );
         }
@@ -192,9 +197,10 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
         case PACKET_TYPE_CONNECTION_ACCEPTED:
         {
             ConnectionAcceptedPacket & packet = (ConnectionAcceptedPacket&) base_packet;
-            if ( packet.client_guid == client.guid && client.state == CLIENT_SENDING_CONNECT_REQUEST )
+            if ( client.state == CLIENT_SENDING_CONNECT_REQUEST &&
+                 packet.client_guid == client.guid && packet.connect_sequence == client.connect_sequence )
             {
-                printf( "client connected\n" );
+                printf( "client connected (%d)\n", client.connect_sequence );
                 client.state = CLIENT_CONNECTED;
                 return true;
             }
@@ -204,9 +210,10 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
         case PACKET_TYPE_CONNECTION_DENIED:
         {
             ConnectionDeniedPacket & packet = (ConnectionDeniedPacket&) base_packet;
-            if ( packet.client_guid == client.guid && client.state == CLIENT_SENDING_CONNECT_REQUEST )
+            if ( client.state == CLIENT_SENDING_CONNECT_REQUEST &&
+                 packet.client_guid == client.guid && packet.connect_sequence == client.connect_sequence )
             {
-                printf( "connection denied\n" );
+                printf( "client connection denied (%d)\n", client.connect_sequence );
                 client.state = CLIENT_CONNECTION_DENIED;
                 return true;
             }
@@ -276,7 +283,7 @@ void client_apply_time_synchronization( Client & client, World & world )
 {
     if ( client.synchronizing && client.ready_to_apply_sync )
     {
-        printf( "synchronized [%d]\n", (int) client.sync_offset );
+        printf( "synchronized [+%d]\n", (int) client.sync_offset );
         world.tick = client.server_tick + client.sync_offset;
         client.client_tick = world.tick;
         client.synchronizing = false;
@@ -399,6 +406,13 @@ int client_main( int argc, char ** argv )
         previous_frame_time = next_frame_time - ClientFrameDeltaTime;
 
         world.frame++;
+
+        if ( world.frame == 20 )
+        {
+            printf( "reconnect\n" );
+
+            client_connect( client, server_address, platform_time() );
+        }
     }
 
     printf( "\n" );
@@ -601,6 +615,8 @@ int client_main( int argc, char ** argv )
 
 int main( int argc, char ** argv )
 {
+    srand( time( NULL ) );
+
     client_main( argc, argv );
 
     return 0;

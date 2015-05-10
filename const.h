@@ -6,7 +6,7 @@
 static const int MaxInputsPerPacket = 63;
 static const int InputSlidingWindowSize = 256;
 
-static const int MaxSyncSamples = 128;
+static const int MaxSyncSamples = 64;
 
 static const int ServerPort = 20000;
 static const float Timeout = 5.0f;

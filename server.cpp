@@ -33,6 +33,7 @@ struct InputEntry
 
 struct InputData
 {
+    uint64_t first_input = 0;
     uint64_t most_recent_input = 0;
     InputEntry inputs[InputSlidingWindowSize];
 };
@@ -44,6 +45,8 @@ struct Server
     uint64_t tick = 0;
 
     uint64_t client_guid[MaxClients];
+
+    uint16_t client_connect_sequence[MaxClients];
 
     Address client_address[MaxClients];
 
@@ -65,6 +68,7 @@ void server_init( Server & server )
     for ( int i = 0; i < MaxClients; ++i )
     {
         server.client_guid[i] = 0;
+        server.client_connect_sequence[i] = 0;
         server.client_state[i] = CLIENT_DISCONNECTED;
         server.client_time_last_packet_received[i] = 0.0;
     }
@@ -86,10 +90,11 @@ void server_update( Server & server, uint64_t tick, double current_real_time )
             if ( current_real_time > server.client_time_last_packet_received[i] + Timeout )
             {
                 char buffer[256];
-                printf( "client %d timed out %s\n", i, server.client_address[i].ToString( buffer, sizeof( buffer ) ) );
+                printf( "client %d timed out %s (%d)\n", i, server.client_address[i].ToString( buffer, sizeof( buffer ) ), server.client_connect_sequence[i] );
                 server.client_state[i] = CLIENT_DISCONNECTED;
                 server.client_address[i] = Address();
                 server.client_guid[i] = 0;
+                server.client_connect_sequence[i] = 0;
                 server.client_time_last_packet_received[i] = 0.0;
                 server.client_sync_data[i] = SyncData();
                 server.client_input_data[i] = InputData();
@@ -192,13 +197,15 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                 if ( client_slot != -1 )
                 {
                     char buffer[256];
-                    printf( "client %d connecting %s\n", client_slot, from.ToString( buffer, sizeof( buffer ) ) );
+                    printf( "client %d connecting %s (%d)\n", client_slot, from.ToString( buffer, sizeof( buffer ) ), packet.connect_sequence );
 
                     // connect client
                     server.client_state[client_slot] = CLIENT_CONNECTING;
                     server.client_guid[client_slot] = packet.client_guid;
+                    server.client_connect_sequence[client_slot] = packet.connect_sequence;
                     server.client_address[client_slot] = from;
                     server.client_time_last_packet_received[client_slot] = server.current_real_time;
+                    server.client_input_data[client_slot] = InputData();
                     server.client_sync_data[client_slot] = SyncData();
                     server.client_sync_data[client_slot].synchronizing = true;
 
@@ -206,6 +213,7 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                     ConnectionAcceptedPacket response;
                     response.type = PACKET_TYPE_CONNECTION_ACCEPTED;
                     response.client_guid = packet.client_guid;
+                    response.connect_sequence = packet.connect_sequence;
                     server_send_packet( server, from, response );
                     return true;
                 }
@@ -215,18 +223,47 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                     ConnectionDeniedPacket response;
                     response.type = PACKET_TYPE_CONNECTION_DENIED;
                     response.client_guid = packet.client_guid;
+                    response.connect_sequence = packet.connect_sequence;
                     server_send_packet( server, from, response );
                     return true;
                 }
             }
             else
             {
-                if ( server.client_state[client_slot] == CLIENT_CONNECTING )
+                if ( packet.connect_sequence == server.client_connect_sequence[client_slot] )
                 {
-                    // we must reply with connection accepted because packets are unreliable
+                    if ( server.client_state[client_slot] == CLIENT_CONNECTING )
+                    {
+                        // we must reply with connection accepted because packets are unreliable
+                        ConnectionAcceptedPacket response;
+                        response.type = PACKET_TYPE_CONNECTION_ACCEPTED;
+                        response.client_guid = packet.client_guid;
+                        response.connect_sequence = packet.connect_sequence;
+                        server.client_time_last_packet_received[client_slot] = server.current_real_time;
+                        server_send_packet( server, from, response );
+                        return true;
+                    }
+                }
+                else if ( sequence_greater_than( packet.connect_sequence, server.client_connect_sequence[client_slot] ) )
+                {
+                    char buffer[256];
+                    printf( "client %d reconnecting %s (%d)\n", client_slot, from.ToString( buffer, sizeof( buffer ) ), packet.connect_sequence );
+
+                    // client reconnect
+                    server.client_state[client_slot] = CLIENT_CONNECTING;
+                    server.client_guid[client_slot] = packet.client_guid;
+                    server.client_connect_sequence[client_slot] = packet.connect_sequence;
+                    server.client_address[client_slot] = from;
+                    server.client_time_last_packet_received[client_slot] = server.current_real_time;
+                    server.client_input_data[client_slot] = InputData();
+                    server.client_sync_data[client_slot] = SyncData();
+                    server.client_sync_data[client_slot].synchronizing = true;
+
+                    // send connection accepted resonse
                     ConnectionAcceptedPacket response;
                     response.type = PACKET_TYPE_CONNECTION_ACCEPTED;
                     response.client_guid = packet.client_guid;
+                    response.connect_sequence = packet.connect_sequence;
                     server_send_packet( server, from, response );
                     return true;
                 }
@@ -240,10 +277,12 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
             int client_slot = server_find_client_slot( server, from );
             if ( client_slot != -1 )
             {
+                // todo: it would be really great if the client went to a "syncronizing" state here instead
+
                 if ( server.client_state[client_slot] == CLIENT_CONNECTING )
                 {
                     char buffer[256];
-                    printf( "client %d connected %s\n", client_slot, from.ToString( buffer, sizeof( buffer ) ) );
+                    printf( "client %d connected %s (%d)\n", client_slot, from.ToString( buffer, sizeof( buffer ) ), server.client_connect_sequence[client_slot] );
                     server.client_state[client_slot] = CLIENT_CONNECTED;
                 }
 
@@ -257,9 +296,9 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
 
                     server.client_sync_data[client_slot].previous_tick = packet.tick;
 
-                    const int offset = (int) ( server.tick + ( TicksPerServerFrame - 1 ) - ( TicksPerClientFrame - 1 ) - oldest_input_tick );
+                    const int offset = max( 0, (int) ( server.tick + TicksPerServerFrame - oldest_input_tick ) );
 
-//                    printf( "%d - %d (%d) = %d\n", (int) server.tick, (int) oldest_input_tick, (int) packet.tick, offset );
+                    printf( "%d - %d (%d) = %d\n", (int) server.tick, (int) oldest_input_tick, (int) packet.tick, offset );
                     
                     server.client_sync_data[client_slot].num_samples++;
                     server.client_sync_data[client_slot].offset = max( offset, server.client_sync_data[client_slot].offset );
@@ -267,7 +306,7 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                     if ( server.client_sync_data[client_slot].num_samples > MaxSyncSamples && 
                          server.client_sync_data[client_slot].offset == packet.sync_offset )
                     {
-                        printf( "client %d synchronized [%d]\n", client_slot, server.client_sync_data[client_slot].offset );
+                        printf( "client %d synchronized [+%d]\n", client_slot, server.client_sync_data[client_slot].offset );
                         server.client_sync_data[client_slot].synchronizing = false;
                         server.client_sync_data[client_slot].sequence++;
                     }
@@ -277,6 +316,9 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                 {
                     if ( packet.tick > server.client_input_data[client_slot].most_recent_input )
                     {
+                        if ( server.client_input_data[client_slot].most_recent_input == 0 )
+                            server.client_input_data[client_slot].first_input = packet.tick;
+
                         server.client_input_data[client_slot].most_recent_input = packet.tick;
 
                         for ( int i = 0; i < packet.num_inputs; ++i )
@@ -323,7 +365,16 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
     assert( client_slot >= 0 );
     assert( client_slot < MaxClients );
 
-    if ( server.client_state[client_slot] != CLIENT_CONNECTED || server.client_sync_data[client_slot].synchronizing )
+    if ( server.client_state[client_slot] != CLIENT_CONNECTED )
+        return;
+
+    if ( server.client_sync_data[client_slot].synchronizing )
+        return;
+
+    if ( server.client_input_data[client_slot].most_recent_input == 0 )
+        return;
+
+    if ( tick < server.client_input_data[client_slot].first_input )
         return;
 
     for ( int i = 0; i < num_inputs; ++i )
@@ -344,6 +395,7 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
         }
     }
 
+/*
     // lets measure exactly how far ahead the client is delivering inputs
 
     int num_ticks_ahead = 0;
@@ -355,7 +407,8 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
             break;
         num_ticks_ahead++;
     }
-//    printf( "client %d is delivering input %d ticks early\n", client_slot, num_ticks_ahead );
+    printf( "client %d is delivering input %d ticks early\n", client_slot, num_ticks_ahead );
+    */
 }
 
 void server_free( Server & server )

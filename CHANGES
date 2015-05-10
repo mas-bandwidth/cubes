@@ -1,4 +1,27 @@
 
+Saturday Evening, May 9th, 2015
+-------------------------------
+
+    Implement connect with connect sequence that increases so we can distinguish a connection 
+    request for a reconnect from repeated packets for the same session.
+
+    Verify that client can immediately reconnect.
+
+    Client seems to be suddenly dropping a lot of inputs. Why?
+
+    Something is broken. Even adding sync safety doesn't bring back from 0 inputs ahead.
+
+    Something to do with connect w. the reconnect change?
+
+    Nope. Just seems incorrect. Backing out agressive change from previously to sync closer.
+
+    Fixed a bunch of logs where server thought client had dropped inputs.
+
+    Fix is to not try to get inputs from a client who hasn't delivered an input yet.
+
+    Next, ignore any inputs earlier than first input delivered by client.
+
+
 Saturday Lunch, May 9th, 2015
 -----------------------------
 

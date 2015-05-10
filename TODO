@@ -2,18 +2,11 @@ DONE:
 
 TODO:    
 
-    Clean up synchronization code. Separate synchronization packets from input/snapshot packets.
+    -----------------------------------------
 
     Design code for client to speed up and slow down.
 
     Design code to detect if too far ahead or too far behind and tell the client to reconnect.
-
-    Implement connect with connect sequence that increases so we can distinguish a connection 
-    request for a reconnect from repeated packets for the same session.
-
-    This way I can avoid having complicated resynchronization code while remaining connected.
-
-    Client just reconnects and resynchronizes.
 
     -----------------------------------------
 
