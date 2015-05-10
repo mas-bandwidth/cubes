@@ -9,6 +9,10 @@
 #include "render.h"
 #include <stdio.h>
 
+auto server_address = Address( "127.0.0.1", ServerPort );
+//auto server_address = Address( "54.200.68.81", ServerPort );
+//auto server_address = Address( "240.19.82.126", ServerPort );
+
 #define HEADLESS 1
 
 #if !HEADLESS
@@ -167,7 +171,8 @@ void client_send_packets( Client & client )
                     packet.input[i] = client.inputs[index].input;
                     packet.num_inputs++;
                 }
-                printf( "client sent %d inputs\n", packet.num_inputs );
+                if ( client.synchronized )
+                    printf( "client sent %d inputs\n", packet.num_inputs );
             }
             client_send_packet( client, packet );
         }
@@ -340,12 +345,6 @@ int client_main( int argc, char ** argv )
     world_setup_cubes( world );
 
     signal( SIGINT, interrupt_handler );
-
-    //auto server_address = Address( "::1", ServerPort );
-
-    //auto server_address = Address( "54.200.68.81", ServerPort );
-
-    auto server_address = Address( "240.19.82.126", ServerPort );
 
     client_connect( client, server_address, 0.0 );
 

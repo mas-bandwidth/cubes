@@ -312,8 +312,8 @@ void server_receive_packets( Server & server )
         int bytes_read = server.socket->ReceivePacket( from, buffer, sizeof( buffer ) );
         if ( bytes_read == 0 )
             break;
-        char address_buffer[256];
-        printf( "received packet from %s\n", from.ToString( address_buffer, sizeof( address_buffer ) ) );
+//        char address_buffer[256];
+//        printf( "received packet from %s\n", from.ToString( address_buffer, sizeof( address_buffer ) ) );
         read_packet( from, buffer, bytes_read, &server );
     }
 }
@@ -355,7 +355,7 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
             break;
         num_ticks_ahead++;
     }
-    printf( "client %d is delivering input %d ticks early\n", client_slot, num_ticks_ahead );
+//    printf( "client %d is delivering input %d ticks early\n", client_slot, num_ticks_ahead );
 }
 
 void server_free( Server & server )
