@@ -2,15 +2,33 @@ DONE:
 
 TODO:
 
-    *** STOP HERE ***
+    Add adjustment sequence to input packet.
 
-    -----------------------------------------
+    Server should track first input for new adjust sequence.
 
-    Design code for adjustment to speed up and slow down.
+    This way the server can defer measurement of an adjustment until after the inputs
+    come back with that adjustment.
 
-    Implement adjustment.
+    This avoids feedback getting into the measurement!
 
-    -----------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ----------------------------------------
 
     Bring across interpolation delay.
 

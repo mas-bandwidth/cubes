@@ -14,7 +14,7 @@
 
 namespace vectorial {
     
-    template <typename T> T clamp( const T & value, const T & min, const T & max )
+    template <typename T> T vectorial_clamp( const T & value, const T & min, const T & max )
     {
         if ( value < min )
             return min;
@@ -56,9 +56,9 @@ namespace vectorial {
         // todo: would be nicer to do this with simd instructions instead
         float values[3];
         input.store( values );
-        values[0] = vectorial::clamp( values[0], min.x(), max.x() );
-        values[1] = vectorial::clamp( values[1], min.y(), max.y() );
-        values[2] = vectorial::clamp( values[2], min.z(), max.z() );
+        values[0] = vectorial_clamp( values[0], min.x(), max.x() );
+        values[1] = vectorial_clamp( values[1], min.y(), max.y() );
+        values[2] = vectorial_clamp( values[2], min.z(), max.z() );
         input.load( values );
         return input;
     }

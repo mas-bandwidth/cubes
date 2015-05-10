@@ -1,4 +1,28 @@
 
+Sunday Morning, May 10th, 2015
+------------------------------
+
+    Implement adjustment measure of minimum ticks ahead.
+
+    Try implementing basic adjustment decision, eg. bump sequence, add adjustment integer
+
+    Add adjustment sequence and adjustment to snapshot packet.
+
+    Client should cache these values and detect changes.
+
+    For the moment, client should make an immediate adjustment -- I think it will be unstable, but lets try it.
+
+    First attempt it crashed and burned because it adjusted repeatedly.
+
+    I've limited to just one adjustment and made sure that inputs are filled (temporary hack) so the server
+    doesn't think that inputs are getting dropped because of holes in the input sliding window on client.
+
+    Now measure input delivery ahead post-adjustment to see if it is adjusting correctly.
+
+    It seems to work perfectly, however -- the measurement is clouded initially for a while
+    until the client puts through inputs that have the adjustment.
+
+
 Late Saturday Evening, May 9th, 2015
 ------------------------------------
 

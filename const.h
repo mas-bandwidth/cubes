@@ -6,9 +6,13 @@
 static const int MaxInputsPerPacket = 63;
 static const int InputSlidingWindowSize = 256;
 
+static const int InputSafety = 8;
 static const int MaxSyncSamples = 32;
 static const int MaxBracketSamples = 32;
-static const int BracketSafety = 8;
+static const int MaxAdjustmentSamples = 64;
+static const int AdjustmentOffsetBits = 6;
+static const int AdjustmentOffsetMinimum = - ( 1 << ( AdjustmentOffsetBits - 1 ) );     // -32
+static const int AdjustmentOffsetMaximum = - AdjustmentOffsetMinimum - 1;               // +31
 
 static const int ReconnectDroppedInputs = 16;
 static const double DroppedInputForgetTime = 5.0f;

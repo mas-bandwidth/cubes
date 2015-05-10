@@ -112,13 +112,15 @@ struct InputPacket : public Packet
 
 struct SnapshotPacket : public Packet
 {
-    bool synchronizing;
-    bool bracketing;
-    bool reconnect;
-    uint16_t sync_offset;
-    uint16_t bracket_offset;
-    uint64_t tick;
-    uint64_t input_ack;
+    bool synchronizing = false;
+    bool bracketing = false;
+    bool reconnect = false;
+    uint16_t sync_offset = 0;
+    uint16_t bracket_offset = 0;
+    uint16_t adjustment_sequence = 0;
+    int adjustment_offset = 0;
+    uint64_t tick = 0;
+    uint64_t input_ack = 0;
 
     SERIALIZE_OBJECT( stream )
     {
@@ -133,6 +135,13 @@ struct SnapshotPacket : public Packet
             serialize_bool( stream, reconnect );
             serialize_bool( stream, bracketing );
             serialize_uint16( stream, bracket_offset );
+
+            if ( !bracketing )
+            {
+                serialize_uint16( stream, adjustment_sequence );
+                serialize_int( stream, adjustment_offset, AdjustmentOffsetMinimum, AdjustmentOffsetMaximum );
+            }
+
             serialize_uint64( stream, tick );
             serialize_uint64( stream, input_ack );
 

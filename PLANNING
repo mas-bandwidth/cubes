@@ -1,5 +1,51 @@
 PLANNING
 
+    ------------------------------------------
+
+    What is the criteria for speed up or slowing down?
+
+    I think you take the average of how far ahead the client is delivering input over a period of time.
+
+    *or* do you take the minimum of how far ahead client is delivering input?
+
+    Which is most appropriate?
+
+    I think this is for small adjustments, not precise OSHIT moments so the client should never be
+    worried about delivering inputs late. If the client does do that then the client will be quickly
+    told to resynchronize.
+
+    ------------------------------------------
+
+    Design code for adjustment to speed up and slow down.
+
+    There should be an adjust sequence.
+
+    Adjust starts at zero.
+
+    Each time a new adjustment is to be made adjust increases sequence.
+
+    When the client notices a new adjustment.
+
+    Client also sends adjustment sequence to server inside input, so server can
+    detect when the adjustment has been applied and measure the result.
+
+    Basically it is two part:
+
+    1. measure (normal)
+
+    2. adjustment (one second?)
+
+    3. measure (...)
+
+    4. adjustment
+
+    And so on. It's not a continuous process. It's a process where something is tried,
+    result are measured, then a decision is mode (speed up, slow down, stay the same).
+
+    ------------------------------------------
+
+    Sync safety of 8 frames.
+
     This is meant to give some warning if the guy is falling behind (due to network conditions changing, 
     or the client hitching or VSYNC is not quite 60fps or whatever.)
 

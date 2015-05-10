@@ -14,7 +14,7 @@ auto server_address = Address( "127.0.0.1", ServerPort );
 //auto server_address = Address( "240.19.82.126", ServerPort );
 
 #define HEADLESS 1
-#define RUN_TESTS 1
+#define RUN_TESTS 0
 
 #if !HEADLESS
 #include <GL/glew.h>
@@ -65,6 +65,9 @@ struct Client
     bool bracketed;
 
     bool reconnect;
+    int adjustment_offset;
+    uint16_t adjustment_sequence;
+    bool ready_to_apply_adjustment_offset;
 
     bool active;
     uint64_t input_ack;
@@ -105,6 +108,9 @@ void client_connect( Client & client, const Address & address, double current_re
     client.input_ack = 0;
     client.connect_sequence++;
     client.reconnect = false;
+    client.adjustment_offset = 0;
+    client.adjustment_sequence = 0;
+    client.ready_to_apply_adjustment_offset = false;
     memset( client.inputs, 0, sizeof( client.inputs ) );
 }
 
@@ -133,9 +139,9 @@ void client_update( Client & client, double current_real_time )
     }
 }
 
-void client_add_input( Client & client, const Input & input, uint64_t tick )
+void client_add_input( Client & client, const Input & input, uint64_t tick, int num_inputs )
 {
-    for ( int i = 0; i < TicksPerClientFrame; ++i )
+    for ( int i = 0; i < num_inputs; ++i )
     {
         const int index = ( ( tick + i ) % InputSlidingWindowSize );
         client.inputs[index].tick = tick + i;
@@ -279,14 +285,8 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                 {
                     if ( !packet.synchronizing )
                     {
-                        if ( !client.bracketing && packet.bracketing )
-                        {
-                            printf( "client started bracketing\n" );
-                        }
-
                         if ( client.bracketing && !packet.bracketing )
                         {
-                            printf( "client finished bracketing\n" );
                             client.ready_to_apply_bracket_offset = true;
                             client.bracket_offset = packet.bracket_offset;
                         }
@@ -294,6 +294,13 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                         client.reconnect = packet.reconnect;
                         client.bracketing = packet.bracketing;
                         client.input_ack = packet.input_ack;
+
+                        if ( client.adjustment_sequence != packet.adjustment_sequence )
+                        {
+                            client.adjustment_sequence = packet.adjustment_sequence;
+                            client.adjustment_offset = packet.adjustment_offset;
+                            client.ready_to_apply_adjustment_offset = true;
+                        }
                     }
                 }
             }
@@ -348,6 +355,25 @@ void client_apply_time_synchronization( Client & client, World & world )
         world.tick -= client.bracket_offset;
         client.client_tick = world.tick;
         memset( client.inputs, 0, sizeof( client.inputs ) );
+    }
+
+    if ( client.ready_to_apply_adjustment_offset )
+    {
+        // todo: this is a hack to test it -- in reality what will be done is that this adjustment
+        // will be made over the course of one second the client will tick run slightly more or less
+        // ticks than usual
+
+        printf( "client adjustment [%+d]\n", (int) client.adjustment_offset );
+
+        const uint64_t original_world_tick = world.tick;
+
+        client.ready_to_apply_adjustment_offset = false;
+        world.tick += client.adjustment_offset;
+        client.client_tick = world.tick;
+
+        // hack: need to back fill inputs for any frames we skip so server doesn't think we're dropping inputs
+        if ( client.adjustment_offset > 0 )
+            client_add_input( client, Input(), original_world_tick, client.adjustment_offset );
     }
 
     world.active = client.active;
@@ -435,13 +461,13 @@ int client_main( int argc, char ** argv )
 
         Input input;
 
-        client_add_input( client, input, world.tick );
-
         client_update( client, frame_time );
 
         client_receive_packets( client );
 
         client_apply_time_synchronization( client, world );
+
+        client_add_input( client, input, world.tick, TicksPerClientFrame );
 
         client_send_packets( client );
 

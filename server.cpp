@@ -38,6 +38,10 @@ struct AdjustmentData
     bool reconnect = false;
     int num_dropped_inputs = 0;
     double time_last_dropped_input = 0.0;
+    uint16_t sequence = 0;
+    int min_ticks_ahead = 0;
+    int num_samples = 0;
+    int offset = 0;
 };  
 
 struct InputEntry
@@ -190,6 +194,8 @@ void server_send_packets( Server & server )
                 packet.reconnect = server.client_adjustment_data[i].reconnect;
                 packet.bracketing = server.client_bracket_data[i].bracketing;
                 packet.bracket_offset = server.client_bracket_data[i].offset;
+                packet.adjustment_sequence = server.client_adjustment_data[i].sequence;
+                packet.adjustment_offset = server.client_adjustment_data[i].offset;
                 packet.input_ack = server.client_input_data[i].most_recent_input;
             }
             server_send_packet( server, server.client_address[i], packet );
@@ -339,7 +345,6 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                         server.client_sync_data[client_slot].synchronizing = false;
                         server.client_sync_data[client_slot].sequence++;
                         server.client_bracket_data[client_slot].bracketing = true;
-                        printf( "client %d started bracketing\n", client_slot );
                     }
                 }
 
@@ -420,6 +425,7 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
     // measure exactly how far ahead the client is delivering inputs
 
     int num_ticks_ahead = 0;
+
     while ( true )
     {
         uint64_t input_tick = tick + num_inputs + num_ticks_ahead;
@@ -438,12 +444,12 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
     
     if ( server.client_bracket_data[client_slot].bracketing )
     {
-        num_ticks_ahead = max( 0, num_ticks_ahead - BracketSafety );
+        int ticks_ahead_of_safety = max( 0, num_ticks_ahead - InputSafety );
 
         if ( server.client_bracket_data[client_slot].num_samples > 0 )
-            server.client_bracket_data[client_slot].offset = min( num_ticks_ahead, server.client_bracket_data[client_slot].offset );
+            server.client_bracket_data[client_slot].offset = min( ticks_ahead_of_safety, server.client_bracket_data[client_slot].offset );
         else
-            server.client_bracket_data[client_slot].offset = num_ticks_ahead;
+            server.client_bracket_data[client_slot].offset = ticks_ahead_of_safety;
 
 //        printf( "client %d bracketing offset = %d\n", client_slot, (int) server.client_bracket_data[client_slot].offset );
 
@@ -487,7 +493,30 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
             }
         }
 
-        // if the client has not had any dropped inputs for a period of time, reset dropped input count
+        // detect if we need to make adjustments (speed up or slow down client)
+
+        if ( server.client_adjustment_data[client_slot].num_samples > 0 )
+            server.client_adjustment_data[client_slot].min_ticks_ahead = min( server.client_adjustment_data[client_slot].min_ticks_ahead, num_ticks_ahead );
+        else
+            server.client_adjustment_data[client_slot].min_ticks_ahead = num_ticks_ahead;
+
+        server.client_adjustment_data[client_slot].num_samples++;
+
+        if ( server.client_adjustment_data[client_slot].num_samples == MaxAdjustmentSamples )
+        {
+            server.client_adjustment_data[client_slot].offset = - clamp( server.client_adjustment_data[client_slot].min_ticks_ahead - InputSafety, AdjustmentOffsetMinimum, AdjustmentOffsetMaximum );
+            printf( "client %d is %d ticks ahead: adjustment offset = %+d\n", client_slot, server.client_adjustment_data[client_slot].min_ticks_ahead, server.client_adjustment_data[client_slot].offset );
+            server.client_adjustment_data[client_slot].min_ticks_ahead = 0;
+            server.client_adjustment_data[client_slot].num_samples = 0;
+
+            // hack: only make one adjustment for the moment!
+            if ( server.client_adjustment_data[client_slot].sequence == 0 )
+            {
+                server.client_adjustment_data[client_slot].sequence++;
+            }
+        }
+
+        // if the client has not had any dropped inputs for a period of time, reset their dropped input count
 
         const double time_since_last_dropped_input = real_time - server.client_adjustment_data[client_slot].time_last_dropped_input;
 
