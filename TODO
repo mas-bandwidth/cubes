@@ -2,34 +2,6 @@ DONE:
 
 TODO:
 
-    --------------------------
-
-    Client needs to apply the adjustment gradually rather than immediately.
-
-    Seems premature to do this before the client is running simulation though.
-
-    So way forward would be for the client to run a simulation.
-
-    --------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     ----------------------------------------
 
     Bring across interpolation delay.

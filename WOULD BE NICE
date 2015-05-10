@@ -2,6 +2,18 @@ WOULD BE NICE
 
     -----------------------------------------
 
+    Client needs to adjust ticks gradually rather than immediately.
+
+    Client should report back that the adjustment is made once the adjustment has been performed.
+
+    A rate of adjustment, eg. one tick per-1/4 second or something like that should be established
+
+    This way fast adjustments, eg. common +/- tick adjustments can be made quickly
+
+    While larger adjustments can be spread out over a second or more
+
+    -----------------------------------------
+
     I don't think "frame" is really a property of the world.
 
     World shouldn't care about frames at all.
