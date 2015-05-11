@@ -1,18 +1,17 @@
 DONE:
 
-    Try to get the server running on my linode box.
-
-    I should be able to control firewall rules here and get it working. I think terminal.com blocks UDP traffic.
-
-    Having trouble installing premake4.
-
-    Upgrading the system
-
 TODO:
 
-    Setup linode ssh key to access. Disable root access by password on linux box.
+    There is some fluctuation on the linux box.
 
+    Instead of measuring minimum delivering for adjustments, take the average
+    then calculate one, two standard deviations of delivery.
 
+    If the standard deviation of delivery is within +/- 4 tolerance of average.
+
+    This should avoid the client fluctuating speed faster/slower for no reason.
+
+    Need to study a bit of statistics to understand exactly what I want to do here.
 
 
 

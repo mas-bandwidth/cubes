@@ -9,9 +9,8 @@
 #include "render.h"
 #include <stdio.h>
 
-auto server_address = Address( "127.0.0.1", ServerPort );
-//auto server_address = Address( "54.200.68.81", ServerPort );
-//auto server_address = Address( "240.19.82.126", ServerPort );
+//auto server_address = Address( "127.0.0.1", ServerPort );
+auto server_address = Address( "173.255.195.190", ServerPort );
 
 #define HEADLESS 1
 #define RUN_TESTS 0
