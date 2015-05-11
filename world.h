@@ -33,12 +33,13 @@ inline void world_add_cube( World & world, const vec3f & position, float scale, 
 inline void world_setup_cubes( World & world )
 {
     const float PlayerCubeSize = 1.5f;
-    const float NonPlayerCubeSize = 0.4f;
+//    const float NonPlayerCubeSize = 0.4f;
 
     world.physics_manager->AddPlane( vec3f(0,0,1), 0 );
 
     world_add_cube( world, vectorial::vec3f(0,0,10), PlayerCubeSize, true, ENTITY_PLAYER_BEGIN );
 
+    /*
     const int grid_size = 30;
     const float origin = -grid_size / 2.0f + 0.5f;
     const float z = NonPlayerCubeSize / 2.0f;
@@ -50,6 +51,7 @@ inline void world_setup_cubes( World & world )
             world_add_cube( world, vec3f( x + origin, y + origin, z ), NonPlayerCubeSize, false );
         }
     }
+    */
 }
 
 inline void world_tick( World & world )

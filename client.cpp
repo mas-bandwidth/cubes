@@ -12,7 +12,7 @@
 //auto server_address = Address( "127.0.0.1", ServerPort );
 auto server_address = Address( "173.255.195.190", ServerPort );
 
-#define HEADLESS 1
+#define HEADLESS 0
 #define RUN_TESTS 0
 
 #if !HEADLESS
@@ -665,11 +665,10 @@ int client_main( int argc, char ** argv )
 
     double previous_frame_time = platform_time();
 
+    client_connect( client, server_address, 0.0 );
+
     while ( true )
     {
-        if ( client.state == CLIENT_TIMED_OUT || client.state == CLIENT_CONNECTION_DENIED )
-            break;
-
         glfwSwapBuffers( window );
 
         double frame_start_time = platform_time();
@@ -678,7 +677,7 @@ int client_main( int argc, char ** argv )
 
         Input input = client_sample_input( window );
 
-        client_add_input( client, input, world.tick )
+        client_add_input( client, input, world.tick, TicksPerClientFrame );
 
         client_update( client, frame_start_time );
 
@@ -698,6 +697,11 @@ int client_main( int argc, char ** argv )
 
         if ( glfwWindowShouldClose( window ) )
             break;
+
+        if ( client.reconnect )
+        {
+            client_reconnect( client, platform_time() );
+        }
     }
 
     world_free( world );

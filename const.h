@@ -6,7 +6,7 @@
 static const int MaxInputsPerPacket = 63;
 static const int InputSlidingWindowSize = 256;
 
-static const int InputSafety = 8;
+static const int InputSafety = 16;                      // todo: it would be nice if this was a minimum and it could grow as required
 static const int MaxSyncSamples = 30;
 static const int MaxBracketSamples = 30;
 static const int MaxAdjustmentSamples = 60;
@@ -14,7 +14,7 @@ static const int AdjustmentOffsetBits = 6;
 static const int AdjustmentOffsetMinimum = - ( 1 << ( AdjustmentOffsetBits - 1 ) );     // -32
 static const int AdjustmentOffsetMaximum = - AdjustmentOffsetMinimum - 1;               // +31
 
-static const int ReconnectDroppedInputs = 16;
+static const int ReconnectDroppedInputs = 60;
 static const double DroppedInputForgetTime = 5.0f;
 
 static const int ServerPort = 20000;

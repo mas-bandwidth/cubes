@@ -1,18 +1,26 @@
 DONE:
 
+    Removed linux MOTD. Annoying.
+
+    Get the non-headless client working and connect it to the server.
+
+    Seems that the server gets into modes where the client drops inputs.
+
+    I'm not sure if this is bursts of packet loss or the client being legitimately behind.
+
+    If I set the client to run 16 ticks ahead of the server (safety) this would let me know
+    if it is dropped packets or if the client is just late (due to packet loss or otherwise).
+
 TODO:
 
-    There is some fluctuation on the linux box.
+    Get the server sending back uncompressed position, orientation, linear, angular velocity
+    for the one cube. I can verify that at least the client inputs are being sent across to server
+    and being received, and then I can interpolate the position of the client
 
-    Instead of measuring minimum delivering for adjustments, take the average
-    then calculate one, two standard deviations of delivery.
+    ----------------------------------------
 
-    If the standard deviation of delivery is within +/- 4 tolerance of average.
 
-    This should avoid the client fluctuating speed faster/slower for no reason.
-
-    Need to study a bit of statistics to understand exactly what I want to do here.
-
+    ----------------------------------------
 
 
 

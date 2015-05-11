@@ -2,6 +2,19 @@ WOULD BE NICE
 
     -----------------------------------------
 
+    There is some fluctuation on the linux box.
+
+    Instead of measuring minimum delivering for adjustments, take the average
+    then calculate one, two standard deviations of delivery.
+
+    If the standard deviation of delivery is within +/- 4 tolerance of average.
+
+    This should avoid the client fluctuating speed faster/slower for no reason.
+
+    Need to study a bit of statistics to understand exactly what I want to do here.
+
+    -----------------------------------------
+
     Client needs to adjust ticks gradually rather than immediately.
 
     Client should report back that the adjustment is made once the adjustment has been performed.
