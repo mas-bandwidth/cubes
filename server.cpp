@@ -332,7 +332,7 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
 
                     server.client_sync_data[client_slot].previous_tick = packet.tick;
 
-                    const int offset = max( 0, (int) ( server.tick + TicksPerServerFrame - oldest_input_tick ) );
+                    const int offset = max( 0, (int) ( server.tick + TicksPerServerFrame + TicksPerClientFrame + InputSafety - oldest_input_tick ) );
 
 //                    printf( "%d - %d (%d) = %d\n", (int) server.tick, (int) oldest_input_tick, (int) packet.tick, offset );
                     
@@ -444,13 +444,13 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
         num_ticks_ahead++;
     }
 
-    /*
+/*
     if ( !server.client_bracket_data[client_slot].bracketing )
     {
         printf( "client %d delivered input %d ticks early\n", client_slot, num_ticks_ahead );
     }
     */
-    
+
     if ( server.client_bracket_data[client_slot].bracketing )
     {
         int ticks_ahead_of_safety = max( 0, num_ticks_ahead - InputSafety );
@@ -486,6 +486,7 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
             }
             else
             {
+                /*
                 // if the client drops too many inputs, force them to reconnect and resynchronize
 
                 printf( "client %d dropped input %d\n", client_slot, (int) input_tick );
@@ -499,6 +500,7 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
                     server.client_adjustment_data[client_slot].reconnect = true;
                     return;
                 }
+                */
             }
         }
 

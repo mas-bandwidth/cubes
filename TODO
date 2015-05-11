@@ -11,14 +11,21 @@ DONE:
     If I set the client to run 16 ticks ahead of the server (safety) this would let me know
     if it is dropped packets or if the client is just late (due to packet loss or otherwise).
 
+    Client still seems to be dropping a lot of inputs even at 16.
+
+    I suspect the dropped inputs are not the network but are an error with the adjustment of client tick.
+
+    Or they could be something caused by the non-headless client.
+
+    Try with headless client. Does the same thing happen?
+
+    It doesn't seem to. Not exactly making 60fps on client?
+
 TODO:
 
     Get the server sending back uncompressed position, orientation, linear, angular velocity
     for the one cube. I can verify that at least the client inputs are being sent across to server
     and being received, and then I can interpolate the position of the client
-
-    ----------------------------------------
-
 
     ----------------------------------------
 
