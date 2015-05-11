@@ -1,6 +1,28 @@
 DONE:
 
+    Try to get the server running on my linode box.
+
+    I should be able to control firewall rules here and get it working. I think terminal.com blocks UDP traffic.
+
+    Having trouble installing premake4.
+
+    Upgrading the system
+
 TODO:
+
+    Setup linode ssh key to access. Disable root access by password on linux box.
+
+
+
+
+
+
+
+
+
+
+
+
 
     ----------------------------------------
 

@@ -361,7 +361,7 @@ public:
 
         if ( m_bitsRead + bytes * 8 >= m_numBits )
         {
-            memset( data, bytes, 0 );
+            memset( data, 0, bytes );
             m_overflow = true;
             return;
         }
