@@ -1,7 +1,7 @@
 solution "cubes"
     includedirs { ".", "vectorial" }
     platforms { "x64" }
-    configurations { "Release", "Debug" }
+    configurations { "Debug", "Release" }
     flags { "Symbols", "ExtraWarnings", "EnableSSE2", "FloatFast" , "NoRTTI", "NoExceptions" }
     configuration "Release"
         flags { "OptimizeSpeed" }

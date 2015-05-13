@@ -1,4 +1,29 @@
 
+Monday, May 11th, 2015 (Home sick from work)
+--------------------------------------------
+
+    Removed linux MOTD. Annoying.
+
+    Get the non-headless client working and connect it to the server.
+
+    Seems that the server gets into modes where the client drops inputs.
+
+    I'm not sure if this is bursts of packet loss or the client being legitimately behind.
+
+    If I set the client to run 16 ticks ahead of the server (safety) this would let me know
+    if it is dropped packets or if the client is just late (due to packet loss or otherwise).
+
+    Client still seems to be dropping a lot of inputs even at 16.
+
+    I suspect the dropped inputs are not the network but are an error with the adjustment of client tick.
+
+    Or they could be something caused by the non-headless client.
+
+    Try with headless client. Does the same thing happen?
+
+    It doesn't seem to. Not exactly making 60fps on client?
+
+
 Sunday Lunch, May 10th, 2015
 ----------------------------
 

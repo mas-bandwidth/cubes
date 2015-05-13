@@ -9,10 +9,10 @@
 #include "render.h"
 #include <stdio.h>
 
-auto server_address = Address( "127.0.0.1", ServerPort );
-//auto server_address = Address( "173.255.195.190", ServerPort );
+//auto server_address = Address( "127.0.0.1", ServerPort );
+auto server_address = Address( "173.255.195.190", ServerPort );
 
-#define HEADLESS 1
+#define HEADLESS 0
 #define RUN_TESTS 0
 
 #if !HEADLESS
@@ -73,6 +73,12 @@ struct Client
     InputEntry inputs[InputSlidingWindowSize];
 
     bool suppress_send_packets;
+
+    // hack: we just need this position of one cube for now -- eventually this will be a ring buffer of snapshots containing all world state
+    vec3f cube_position;
+    quat4f cube_orientation;
+    vec3f cube_linear_velocity;
+    vec3f cube_angular_velocity;
 };
 
 void client_init( Client & client )
@@ -82,6 +88,12 @@ void client_init( Client & client )
     client.guid = rand();
     client.state = CLIENT_DISCONNECTED;
     client.suppress_send_packets = false;
+
+    // hack
+    client.cube_position = vec3f(0,0,0);
+    client.cube_orientation = quat4f::identity();
+    client.cube_linear_velocity = vec3f(0,0,0);
+    client.cube_angular_velocity = vec3f(0,0,0);
 }
 
 void client_connect( Client & client, const Address & address, double current_real_time )
@@ -136,6 +148,21 @@ void client_update( Client & client, double current_real_time )
             client.state = CLIENT_TIMED_OUT;
         }
     }
+}
+
+void client_apply_snapshot( Client & client, World & world )
+{
+    if ( !client.active )
+        return;
+
+    /*
+    printf( "cube_position = (%f,%f,%f)\n", client.cube_position.x(), client.cube_position.y(), client.cube_position.z() );
+    printf( "cube_orientation = (%f,%f,%f,%f)\n", client.cube_orientation.x(), client.cube_orientation.y(), client.cube_orientation.z(), client.cube_orientation.w() );
+    printf( "cube_linear_velocity = (%f,%f,%f)\n", client.cube_linear_velocity.x(), client.cube_linear_velocity.y(), client.cube_linear_velocity.z() );
+    printf( "cube_angular_velocity = (%f,%f,%f)\n", client.cube_angular_velocity.x(), client.cube_angular_velocity.y(), client.cube_angular_velocity.z() );
+    */
+
+    world.cube_manager->SetCubeState( 0, client.cube_position, client.cube_orientation, client.cube_linear_velocity, client.cube_angular_velocity );
 }
 
 void client_add_input( Client & client, const Input & input, uint64_t tick, int num_inputs )
@@ -302,6 +329,11 @@ bool process_packet( const Address & from, Packet & base_packet, void * context 
                             client.adjustment_offset = packet.adjustment_offset;
                             client.ready_to_apply_adjustment_offset = true;
                         }
+
+                        client.cube_position = packet.cube_position;
+                        client.cube_orientation = packet.cube_orientation;
+                        client.cube_linear_velocity = packet.cube_linear_velocity;
+                        client.cube_angular_velocity = packet.cube_angular_velocity;
                     }
                 }
             }
@@ -476,6 +508,8 @@ int client_main( int argc, char ** argv )
 
         client_post_frame( client, world );
 
+        client_apply_snapshot( client, world );
+
         const double end_of_frame_time = platform_time();
 
         int num_frames_advanced = 0;
@@ -541,9 +575,12 @@ void client_clear()
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 }
 
-void client_render( const World & world )
+void client_render( const World & world, bool active )
 {
     client_clear();
+
+    if ( !active )
+        return;
 
     CubeEntity * player = (CubeEntity*) world.entity_manager->GetEntity( ENTITY_PLAYER_BEGIN );
 
@@ -691,7 +728,9 @@ int client_main( int argc, char ** argv )
 
         client_post_frame( client, world );
 
-        client_render( world );
+        client_apply_snapshot( client, world );
+
+        client_render( world, client.active );
 
         glfwPollEvents();
 

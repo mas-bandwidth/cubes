@@ -1,31 +1,39 @@
 DONE:
 
-    Removed linux MOTD. Annoying.
-
-    Get the non-headless client working and connect it to the server.
-
-    Seems that the server gets into modes where the client drops inputs.
-
-    I'm not sure if this is bursts of packet loss or the client being legitimately behind.
-
-    If I set the client to run 16 ticks ahead of the server (safety) this would let me know
-    if it is dropped packets or if the client is just late (due to packet loss or otherwise).
-
-    Client still seems to be dropping a lot of inputs even at 16.
-
-    I suspect the dropped inputs are not the network but are an error with the adjustment of client tick.
-
-    Or they could be something caused by the non-headless client.
-
-    Try with headless client. Does the same thing happen?
-
-    It doesn't seem to. Not exactly making 60fps on client?
-
-TODO:
-
     Get the server sending back uncompressed position, orientation, linear, angular velocity
     for the one cube. I can verify that at least the client inputs are being sent across to server
     and being received, and then I can interpolate the position of the client
+
+    Just take the latest position/orientation for the player cube received and render it
+
+    Hey it's actually working. Holy shit! :)
+
+    Client should not render cubes until it is active.
+
+TODO:
+
+    Reduce server send rate to 10 packets per-second. Make this configurable in const.h
+
+    Verify client now gets cube at 10HZ strobe
+
+    ---------------------------------------
+
+    Move single cube data into snapshot structure
+
+    Implement a buffer on the client of snapshots indexed by tick
+
+    Now bring the code for hermite interpolation back for the cube and smooth it out
+
+    Add code to watch how early the server is delivering snapshots to the client
+
+    If the client needs to slow down or speed up the iterator for interpolation, 
+    implement this adjustment slowly over time, eg. +/- x ticks over y seconds.
+
+    Now we have three time streams:
+
+        - interpolated time (most in past)
+        - server RTT time (client side prediction rewinds to here)
+        - predicted client time (driven by the server telling the client to speed up or slow down)
 
     ----------------------------------------
 

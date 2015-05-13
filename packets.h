@@ -5,6 +5,10 @@
 
 #include "protocol.h"
 #include "game.h"
+#include "vectorial/vec3f.h"
+#include "vectorial/quat4f.h"
+
+using namespace vectorial;
 
 enum PacketType
 {
@@ -97,6 +101,10 @@ struct InputPacket : public Packet
                         serialize_bool( stream, input[i].push );
                         serialize_bool( stream, input[i].pull );
                     }
+                    else
+                    {
+                        input[i] = input[i-1];
+                    }
                 }
                 else
                 {
@@ -112,6 +120,31 @@ struct InputPacket : public Packet
     }
 };
 
+template <typename Stream> inline void serialize_vector( Stream & stream, vec3f & vector )
+{
+    float values[3];
+    if ( Stream::IsWriting )
+        vector.store( values );
+    serialize_float( stream, values[0] );
+    serialize_float( stream, values[1] );
+    serialize_float( stream, values[2] );
+    if ( Stream::IsReading )
+        vector.load( values );
+}
+
+template <typename Stream> inline void serialize_quaternion( Stream & stream, vectorial::quat4f & quaternion )
+{
+    float values[4];
+    if ( Stream::IsWriting )
+        quaternion.store( values );
+    serialize_float( stream, values[0] );
+    serialize_float( stream, values[1] );
+    serialize_float( stream, values[2] );
+    serialize_float( stream, values[3] );
+    if ( Stream::IsReading )
+        quaternion.load( values );
+}
+
 struct SnapshotPacket : public Packet
 {
     bool synchronizing = false;
@@ -123,6 +156,10 @@ struct SnapshotPacket : public Packet
     int adjustment_offset = 0;
     uint64_t tick = 0;
     uint64_t input_ack = 0;
+    vec3f cube_position;
+    quat4f cube_orientation;
+    vec3f cube_linear_velocity;
+    vec3f cube_angular_velocity;
 
     SERIALIZE_OBJECT( stream )
     {
@@ -147,7 +184,10 @@ struct SnapshotPacket : public Packet
             serialize_uint64( stream, tick );
             serialize_uint64( stream, input_ack );
 
-            // todo: serialize rest of snapshot
+            serialize_vector( stream, cube_position );
+            serialize_quaternion( stream, cube_orientation );
+            serialize_vector( stream, cube_linear_velocity );
+            serialize_vector( stream, cube_angular_velocity );
         }
     }
 };

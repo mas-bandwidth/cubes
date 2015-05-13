@@ -79,6 +79,22 @@ struct CubeManager
         entity_manager->Free( entity_index );
     }
 
+    void SetCubeState( int cube_index,
+                       const vec3f & position, 
+                       const quat4f & orientation,
+                       const vec3f & linear_velocity,
+                       const vec3f & angular_velocity )
+    {
+        assert( cube_index >= 0 );
+        assert( cube_index < MaxCubes );
+        if ( !allocated[cube_index] )
+            return;
+        cubes[cube_index].position = position;
+        cubes[cube_index].orientation = orientation;
+        cubes[cube_index].linear_velocity = linear_velocity;
+        cubes[cube_index].angular_velocity = angular_velocity;
+    }
+
     void PrePhysicsUpdate()
     {
         PhysicsObjectState object_state;

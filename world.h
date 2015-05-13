@@ -62,9 +62,15 @@ inline void world_tick( World & world )
 
         world.cube_manager->PrePhysicsUpdate();
 
+#ifndef CLIENT
+
+        // hack: run physics on the server only for now
+
         world.physics_manager->Update( world.tick, world.time, TickDeltaTime );
 
         world.physics_manager->WalkInteractions( world.entity_manager );
+
+#endif // #ifndef CLIENT
 
         world.cube_manager->PostPhysicsUpdate();
 

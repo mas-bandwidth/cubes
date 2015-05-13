@@ -83,6 +83,12 @@ struct Server
     AdjustmentData client_adjustment_data[MaxClients];
 
     InputData client_input_data[MaxClients];
+
+    // hack: we just need this position of one cube for now -- eventually this will be a ring buffer of snapshots containing all world state
+    vec3f cube_position;
+    quat4f cube_orientation;
+    vec3f cube_linear_velocity;
+    vec3f cube_angular_velocity;
 };
 
 void server_init( Server & server )
@@ -100,6 +106,12 @@ void server_init( Server & server )
     server.current_real_time = 0.0;
 
     printf( "server listening on port %d\n", server.socket->GetPort() );
+
+    // hack
+    server.cube_position = vec3f(0,0,0);
+    server.cube_orientation = quat4f::identity();
+    server.cube_linear_velocity = vec3f(0,0,0);
+    server.cube_angular_velocity = vec3f(0,0,0);
 }
 
 void server_update( Server & server, uint64_t tick, double current_real_time )
@@ -127,6 +139,17 @@ void server_update( Server & server, uint64_t tick, double current_real_time )
             }
         }
     }
+}
+
+void server_take_snapshot( Server & server, World & world )
+{
+    // hack: stash the cube state in the server structure for sending to clients
+    PhysicsObjectState object_state;
+    world.physics_manager->GetObjectState( 0, object_state );
+    server.cube_position = object_state.position;
+    server.cube_orientation = object_state.orientation;
+    server.cube_linear_velocity = object_state.linear_velocity;
+    server.cube_angular_velocity = object_state.angular_velocity;
 }
 
 int server_find_client_slot( const Server & server, const Address & from, uint64_t client_guid )
@@ -478,7 +501,7 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
 
         for ( int i = 0; i < num_inputs; ++i )
         {
-            uint64_t input_tick = tick + i;
+            const uint64_t input_tick = tick + i;
             const int index = input_tick % InputSlidingWindowSize;
             if ( server.client_input_data[client_slot].inputs[index].tick == input_tick )
             {
@@ -486,11 +509,11 @@ void server_get_client_input( Server & server, int client_slot, uint64_t tick, I
             }
             else
             {
-                /*
                 // if the client drops too many inputs, force them to reconnect and resynchronize
 
                 printf( "client %d dropped input %d\n", client_slot, (int) input_tick );
 
+                /*
                 server.client_adjustment_data[client_slot].num_dropped_inputs++;
                 server.client_adjustment_data[client_slot].time_last_dropped_input = real_time;
 
@@ -609,6 +632,8 @@ int server_main( int argc, char ** argv )
         const double start_of_frame_time = platform_time();
 
         server_update( server, world.tick, real_time );
+
+        server_take_snapshot( server, world );
 
         server_receive_packets( server );
 
