@@ -146,6 +146,7 @@ void server_take_snapshot( Server & server, World & world )
     // hack: stash the cube state in the server structure for sending to clients
     PhysicsObjectState object_state;
     world.physics_manager->GetObjectState( 0, object_state );
+//    printf( "cube position = (%f,%f,%f)\n", object_state.position.x(), object_state.position.y(), object_state.position.z() );
     server.cube_position = object_state.position;
     server.cube_orientation = object_state.orientation;
     server.cube_linear_velocity = object_state.linear_velocity;
@@ -199,8 +200,13 @@ void server_send_packet( Server & server, const Address & address, Packet & pack
     }
 }
 
-void server_send_packets( Server & server )
+void server_send_packets( Server & server, double real_time )
 {
+    static double last_send_time = 0.0;
+    if ( last_send_time + ( 1.0 / SnapshotsPerSecond ) > real_time )
+        return;
+    last_send_time = real_time;
+
     for ( int i = 0; i < MaxClients; ++i )
     {
         if ( server.client_state[i] == CLIENT_CONNECTED )
@@ -221,6 +227,10 @@ void server_send_packets( Server & server )
                 packet.adjustment_sequence = server.client_adjustment_data[i].sequence;
                 packet.adjustment_offset = server.client_adjustment_data[i].offset;
                 packet.input_ack = server.client_input_data[i].most_recent_input;
+                packet.cube_position = server.cube_position;
+                packet.cube_orientation = server.cube_orientation;
+                packet.cube_linear_velocity = server.cube_linear_velocity;
+                packet.cube_angular_velocity = server.cube_angular_velocity;
             }
             server_send_packet( server, server.client_address[i], packet );
         }
@@ -637,7 +647,7 @@ int server_main( int argc, char ** argv )
 
         server_receive_packets( server );
 
-        server_send_packets( server );
+        server_send_packets( server, start_of_frame_time );
 
         Input inputs[TicksPerServerFrame];
         server_get_client_input( server, 0, world.tick, inputs, TicksPerServerFrame, start_of_frame_time );

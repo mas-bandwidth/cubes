@@ -3,6 +3,8 @@
 #ifndef CONST_H
 #define CONST_H
 
+static const int SnapshotsPerSecond = 10;
+
 static const int MaxInputsPerPacket = 63;
 static const int InputSlidingWindowSize = 256;
 

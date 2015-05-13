@@ -1,4 +1,34 @@
 
+Wednesday May 13th, 2015 (Home sick still... :( )
+-------------------------------------------------
+
+    Get the server sending back uncompressed position, orientation, linear, angular velocity
+    for the one cube. I can verify that at least the client inputs are being sent across to server
+    and being received, and then I can interpolate the position of the client
+
+    Just take the latest position/orientation for the player cube received and render it
+
+    Hey it's actually working. Holy shit! :)
+
+    Client should not render cubes until it is active.
+
+    Server is completely fucked up when I run in on the linode box though. Why?
+
+    I'm fairly certain there was uninitialized data going on for the input packet serialize.
+
+    Also it seems like the timing for the non-headless client is off causing it to fall behind and lose inputs.
+
+    Disabled the delta encoding on client inputs because it seems to be broken in worst case.
+
+    Reduce server send rate to 10 packets per-second. Make this configurable in const.h
+
+    Client does not seem to display cube when snapshots are sent 10 packets per-second.
+
+    There was uninitialized data in the snapshot packet. What the hell was I smoking yesterday? Sick I guess.
+
+    Verify client now gets cube at 10HZ strobe. Yes. Ready for next stage.
+
+    
 Monday, May 11th, 2015 (Home sick from work)
 --------------------------------------------
 

@@ -1,20 +1,8 @@
 DONE:
 
-    Get the server sending back uncompressed position, orientation, linear, angular velocity
-    for the one cube. I can verify that at least the client inputs are being sent across to server
-    and being received, and then I can interpolate the position of the client
-
-    Just take the latest position/orientation for the player cube received and render it
-
-    Hey it's actually working. Holy shit! :)
-
-    Client should not render cubes until it is active.
-
 TODO:
 
-    Reduce server send rate to 10 packets per-second. Make this configurable in const.h
-
-    Verify client now gets cube at 10HZ strobe
+    ----------------------------------------
 
     ---------------------------------------
 

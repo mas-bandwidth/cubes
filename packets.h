@@ -88,9 +88,16 @@ struct InputPacket : public Packet
             serialize_int( stream, num_inputs, 0, MaxInputsPerPacket );
             for ( int i = 0; i < num_inputs; ++i )
             {
+                serialize_bool( stream, input[i].left );
+                serialize_bool( stream, input[i].right );
+                serialize_bool( stream, input[i].up );
+                serialize_bool( stream, input[i].down );
+                serialize_bool( stream, input[i].push );
+                serialize_bool( stream, input[i].pull );
+                /*
                 if ( i > 0 )
                 {
-                    bool different = Stream::IsWriting ? input[i] != input[i-i] : false;
+                    bool different = Stream::IsWriting ? ( input[i] != input[i-i] ) : false;
                     serialize_bool( stream, different );
                     if ( different )
                     {
@@ -101,7 +108,7 @@ struct InputPacket : public Packet
                         serialize_bool( stream, input[i].push );
                         serialize_bool( stream, input[i].pull );
                     }
-                    else
+                    else if ( Stream::IsReading )
                     {
                         input[i] = input[i-1];
                     }
@@ -115,6 +122,7 @@ struct InputPacket : public Packet
                     serialize_bool( stream, input[i].push );
                     serialize_bool( stream, input[i].pull );
                 }
+                */
             }
         }
     }
